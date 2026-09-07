@@ -78,6 +78,15 @@ try
 
     builder.Services.AddAuthorization();
 
+    // CORS: the React dev client (Vite) runs on a different origin and needs explicit permission.
+    const string devClientCors = "DevClient";
+    var clientOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                        ?? new[] { "http://localhost:5173" };
+    builder.Services.AddCors(options => options.AddPolicy(devClientCors, policy =>
+        policy.WithOrigins(clientOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod()));
+
     var app = builder.Build();
 
     // --- HTTP pipeline, in order ---
@@ -96,7 +105,10 @@ try
 
     app.UseHttpsRedirection();
 
-    // 3. Authentication before authorization.
+    // 3. CORS before auth, so preflight (OPTIONS) requests are answered without a token.
+    app.UseCors(devClientCors);
+
+    // 4. Authentication before authorization.
     app.UseAuthentication();
     app.UseAuthorization();
 
