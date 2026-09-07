@@ -343,9 +343,19 @@ Verified: normal startup + authed/unauthed requests still 200/401; running with 
 - `git config` (local): user.name `shulamit20`, user.email `z0548549581@gmail.com`.
 - Branch renamed `master` → `main`.
 - **First commit done: `c2e93cc`** — 103 files, no bin/obj/logs/secrets (verified: `appsettings.Development.json` has only Logging; User Secrets live outside the repo).
-- **Pushed to GitHub: `https://github.com/shulamit20/EventBooking-Server`** (branch `main`, commit `c2e93cc`). GCM had cached credentials — no manual login needed.
+- **Pushed to GitHub: `https://github.com/shulamit20/EventBooking-Server`** (branch `main`). GCM had cached credentials — no manual login needed.
+- Commit `65209af` — **CORS**: `Program.cs` `AddCors`/`UseCors` policy `DevClient` for `http://localhost:5173` (config `Cors:AllowedOrigins`), `UseCors` before `UseAuthentication` so preflight OPTIONS needs no token. `appsettings.json` got the `Cors` section. Verified: preflight → 204 with `Access-Control-Allow-*`; GET with `Origin` → `Access-Control-Allow-Origin: http://localhost:5173`.
 - TODO: final pass over the Part B checklist in section 3.
-(The React client — Step Q — and the client repo are separate and not started.)
+
+### 2026-09-07 — Step Q DONE (React client built; `npm run build` clean, CORS verified)
+Separate project: `C:\Users\User\Desktop\לימודים תכנות שנה ב\eventbooking-client` (own git repo, branch `main`, commit `f237ddc` — **not pushed yet, needs a 2nd GitHub repo**).
+- Vite 5 + React 18 + `react-router-dom` 6, plain JS/JSX, `fetch` (no axios). `npm install` → 66 pkgs.
+- `src/api.js` — the only place that calls `fetch`: base URL (`VITE_API_URL` ?? `http://localhost:5269`), `Authorization: Bearer` from `localStorage`, throws `ApiError` with `.status` (so screens branch on 409 / 401).
+- `src/auth.jsx` — `AuthContext`, token + user in `localStorage`, `login` / `register` / `logout`.
+- Screens (the brief's 4): `LoginPage` (login/register tabs, stores + sends JWT), `SlotsPage` (`GET /api/hall-slots?page=&pageSize=5` — **real server pagination**, Prev/Next + "page X of Y · N total"), `BookPage` (`POST /api/bookings`; on **409** shows a distinct "התאריך נתפס" panel, not a generic error; 401 → redirect to login), `MyBookingsPage` (`GET /api/bookings/mine` + cancel via `DELETE`). `Nav` shows the "הזמנה" link only for role `Client`.
+- `npm run build` → 41 modules, no errors (proves every JSX/import/syntax across all files). CORS path verified with curl (preflight + GET). Not visually click-tested (no browser tool this session — the student verifies in the browser).
+- Client README with run steps + the 4-screen table + how to trigger the 409.
+- TODO: student creates a 2nd GitHub repo (e.g. `EventBooking-Client`), `git remote add origin …`, `git push -u origin main`.
 - **Open decision:** choose SQL Server or PostgreSQL before any Data-layer work (affects concurrency-token style and all migrations).
 - **Next step (waiting for approval):** start the Data layer — EF Core packages in `EventBooking.Data`, `Microsoft.EntityFrameworkCore.Design` in `EventBooking.API`, `AppDbContext` with a `DbSet` per entity, Fluent API configs, `SaveChangesAsync` override for the concurrency token (if self-managed), connection string via User Secrets, first migration.
 
