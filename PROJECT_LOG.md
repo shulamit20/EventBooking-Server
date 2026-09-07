@@ -338,11 +338,13 @@ Verified: normal startup + authed/unauthed requests still 200/401; running with 
 
 **Server: DONE through Step P.** Build 0W/0E, `dotnet test` 14/14, full e2e (incl. 409) verified.
 
-**Remaining — Step R (server half), needs the student's GitHub account:**
-- Confirm `.gitignore` (bin/obj/logs/secrets — already OK), `git add` + first commit.
-- Create the server GitHub repo under the student's account, push.
-- Final pass over the Part B checklist in section 3.
-- Remove `image.png` / stray files from the repo root if not wanted.
+**Step R (server half) — IN PROGRESS:**
+- `.gitignore`: added `/image.png`, `/cghv.png`, `**/logs/`, `internal-nlog*.txt`.
+- `git config` (local): user.name `shulamit20`, user.email `z0548549581@gmail.com`.
+- Branch renamed `master` → `main`.
+- **First commit done: `c2e93cc`** — 103 files, no bin/obj/logs/secrets (verified: `appsettings.Development.json` has only Logging; User Secrets live outside the repo).
+- **Pushed to GitHub: `https://github.com/shulamit20/EventBooking-Server`** (branch `main`, commit `c2e93cc`). GCM had cached credentials — no manual login needed.
+- TODO: final pass over the Part B checklist in section 3.
 (The React client — Step Q — and the client repo are separate and not started.)
 - **Open decision:** choose SQL Server or PostgreSQL before any Data-layer work (affects concurrency-token style and all migrations).
 - **Next step (waiting for approval):** start the Data layer — EF Core packages in `EventBooking.Data`, `Microsoft.EntityFrameworkCore.Design` in `EventBooking.API`, `AppDbContext` with a `DbSet` per entity, Fluent API configs, `SaveChangesAsync` override for the concurrency token (if self-managed), connection string via User Secrets, first migration.
