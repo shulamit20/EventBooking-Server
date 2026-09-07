@@ -103,7 +103,10 @@ try
         app.UseSwaggerUI();
     }
 
-    app.UseHttpsRedirection();
+    // No HTTPS redirect in Development: the React dev client talks to the plain-HTTP endpoint,
+    // and a 307 to https carries no CORS headers (the browser would block it).
+    if (!app.Environment.IsDevelopment())
+        app.UseHttpsRedirection();
 
     // 3. CORS before auth, so preflight (OPTIONS) requests are answered without a token.
     app.UseCors(devClientCors);
