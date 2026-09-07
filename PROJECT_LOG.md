@@ -355,7 +355,9 @@ Separate project: `C:\Users\User\Desktop\לימודים תכנות שנה ב\eve
 - Screens (the brief's 4): `LoginPage` (login/register tabs, stores + sends JWT), `SlotsPage` (`GET /api/hall-slots?page=&pageSize=5` — **real server pagination**, Prev/Next + "page X of Y · N total"), `BookPage` (`POST /api/bookings`; on **409** shows a distinct "התאריך נתפס" panel, not a generic error; 401 → redirect to login), `MyBookingsPage` (`GET /api/bookings/mine` + cancel via `DELETE`). `Nav` shows the "הזמנה" link only for role `Client`.
 - `npm run build` → 41 modules, no errors (proves every JSX/import/syntax across all files). CORS path verified with curl (preflight + GET). Not visually click-tested (no browser tool this session — the student verifies in the browser).
 - Client README with run steps + the 4-screen table + how to trigger the 409.
-- TODO: student creates a 2nd GitHub repo (e.g. `EventBooking-Client`), `git remote add origin …`, `git push -u origin main`.
+- **Pushed to GitHub: `https://github.com/shulamit20/EventBooking-Client`** (branch `main`, commit `f237ddc`, 16 files). GCM cached credentials again.
+
+**Both repos are now on GitHub. Remaining: student runs the client in a browser to eyeball it; final Part B checklist pass.**
 - **Open decision:** choose SQL Server or PostgreSQL before any Data-layer work (affects concurrency-token style and all migrations).
 - **Next step (waiting for approval):** start the Data layer — EF Core packages in `EventBooking.Data`, `Microsoft.EntityFrameworkCore.Design` in `EventBooking.API`, `AppDbContext` with a `DbSet` per entity, Fluent API configs, `SaveChangesAsync` override for the concurrency token (if self-managed), connection string via User Secrets, first migration.
 
