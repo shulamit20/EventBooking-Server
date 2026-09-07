@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\EventBooking.Core\EventBooking.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 13.0.1 is the last MIT / no-license-key AutoMapper release (15+ needs a license key). -->
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.1.2" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!--
+      NU1903: AutoMapper CVE-2026-32933 - StackOverflow from ~25,000-level nested object graphs.
+      Not reachable here: System.Text.Json rejects payloads deeper than 64 levels before mapping,
+      and every DTO graph in this project is shallow (booking -> slot -> hall -> venue). Fixed only
+      in 15.1.1+ which requires a license key, so we stay on 13.0.1 and suppress this one warning.
+    -->
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
+  </PropertyGroup>
+
+</Project>
