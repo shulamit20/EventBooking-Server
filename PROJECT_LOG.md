@@ -46,6 +46,15 @@ Shared memory between the student and the AI assistant. Keep it updated.
 
 ## 3. Teacher instructions
 
+### Given 2026-09-08 — v2 upgrade: "Event planning & booking platform"
+Full spec saved verbatim in **`FUNCTIONAL_SPEC.md`**. Ordered plan: **`WORK_PLAN_V2.md`**.
+Summary: extend the existing halls system (do NOT rebuild; preserve architecture, entities,
+auth, and the HallSlot 409 concurrency mechanism) into a platform where a customer builds a
+whole event — event type, venue, catering (per-guest pricing), table design, bridal chair,
+extra services, **server-side price calculation**, messaging (customer↔manager), notifications,
+promotions (+ popup), reviews (booking-gated), customer & manager dashboards, backend search/
+filter, and roles Customer/Manager/**Admin**. Phase 1 = functionality only, no UI redesign.
+
 ### Given 2026-09-06 — Final Project brief (Course: .NET Web API Development)
 
 **Goal:** combine every course topic into ONE working server. Depth over breadth — 4 clean entities + proper concurrency beats 15 entities + fat controllers.
