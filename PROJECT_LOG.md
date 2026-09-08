@@ -367,6 +367,43 @@ Separate project: `C:\Users\User\Desktop\לימודים תכנות שנה ב\eve
 - **Pushed to GitHub: `https://github.com/shulamit20/EventBooking-Client`** (branch `main`, commit `f237ddc`, 16 files). GCM cached credentials again.
 
 **Both repos are now on GitHub. Remaining: student runs the client in a browser to eyeball it; final Part B checklist pass.**
+
+---
+
+### 2026-09-08 — v2 Phase A DONE (`WORK_PLAN_V2.md`) — build 0 err, `dotnet test` 14/14, API smoke incl. 409 all green
+Design decisions settled with the student (see `WORK_PLAN_V2.md`): Client→Customer + Admin;
+Event Builder = server draft `Booking`; `Venue.OwnerUserId`; keep plain `fetch`; **enum only
+where code branches on the value — lookup tables for business-managed content.**
+
+- **Roles:** `UserRole` Client→**Customer**, +**Admin**. `AuthService` self-register → Customer.
+  `BookingsController` `[Authorize(Roles="Customer")]`. Client `role === 'Customer'`.
+- **Demo accounts** now seeded via `HasData` (pre-computed BCrypt hash constant) — `admin@` /
+  `manager@` / `client@`, all `Passw0rd!`. **`DemoUserSeeder` deleted**, call removed from `Program.cs`.
+- **Lookups (new tables):** `EventType` (7 rows), `ServiceCategory` (8, with stable `Code`),
+  `EventTypeServiceCategory` link (which categories each event type offers). `LookupRepository`
+  + `LookupService` + `LookupsController` → `GET /api/event-types`, `GET /api/service-categories`.
+- **New enum:** `PricingModel { Flat, PerGuest }` (the price calc switches on it).
+- **`ExtraService`:** + `ServiceCategoryId` FK, `Pricing`, `ImageUrl`, `IsActive`, `OwnerUserId`
+  (Manager). `CreateExtraServiceRequest`/response + mapping updated. `ExtraServiceService.CreateAsync`
+  takes the owner, returns Invalid on a bad category FK.
+- **`Booking`:** `EventType` string → `EventTypeId` FK; `HallSlotId` now **nullable** (Draft has
+  no slot); + `TotalPrice`; + `BookingStatus.Draft`. `BookingExtraService`: + `LineTotal`.
+  `BookingService.CreateAsync` validates the event type, computes each line
+  (`PerGuest` = price × GuestCount, else price × Quantity) and `TotalPrice` **server-side** —
+  a client total is ignored. `SetStatusAsync` rejects a move back to Draft. **The HallSlot 409
+  concurrency flow is untouched** (verified: booking slot 3 twice → 201 then 409).
+- **`Venue`:** + `OwnerUserId` (Manager). `VenueService.CreateAsync` takes the owner;
+  `VenuesController.Create` passes `CurrentUserId`.
+- **Migration `20260908150441_V2Foundation`**. Dev DB **dropped & recreated** (seeded users
+  collided with the old runtime-seeded ones) — 3 users, 7 event types, 8 categories, 47 links,
+  2 venues, 4 services. Migration history now: Init · AddBookingOwnerCreatedAtIndex · V2Foundation.
+- Verified live: `/api/event-types` (7, with category ids), `/api/service-categories` (8),
+  login as `client@` → role **Customer**, book slot 3 Wedding + Catering (220×100=22 000) +
+  Live Band (8 000) on a 15 000 slot → `TotalPrice` **45 000**, repeat → **409**.
+- Commits: server `d4dffb3`, client `947f090`.
+
+**Next: v2 Phase B (Catering `CateringMenu` + a dedicated `PriceCalculationService` + price
+breakdown endpoint).**
 - **Open decision:** choose SQL Server or PostgreSQL before any Data-layer work (affects concurrency-token style and all migrations).
 - **Next step (waiting for approval):** start the Data layer — EF Core packages in `EventBooking.Data`, `Microsoft.EntityFrameworkCore.Design` in `EventBooking.API`, `AppDbContext` with a `DbSet` per entity, Fluent API configs, `SaveChangesAsync` override for the concurrency token (if self-managed), connection string via User Secrets, first migration.
 
