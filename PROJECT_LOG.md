@@ -427,7 +427,20 @@ breadth", so the student will confirm the expanded scope with the teacher; v1 is
   Band (8 000) = **89 000**; booking with that selection stored the same total + `Meat Menu`.
 - Commit `53ef4cf`.
 
-**Next: v2 Phase C (Event Builder — `Draft` bookings + confirm reusing the 409 slot take).**
+### 2026-09-08 — v2 development STOPPED at end of Phase B (student's decision — short on time)
+Phase C was started then abandoned; the WIP was `git stash`ed (`phase-c-wip-abandoned`, not
+applied — safe to `git stash drop`). **The tree is at `fd9c2e9` = Phase B complete.**
+Build green (0 warnings), `dotnet test` **18/18**, server runs, 409 path verified.
+
+Delivered in v2: **Phase A** (Customer/Manager/Admin roles, `EventType` + `ServiceCategory`
+lookup tables + link, `PricingModel` enum, `ExtraService`/`Booking`/`Venue` extended, seed via
+HasData) + **Phase B** (`CateringMenu`, `PriceCalculationService`, `POST /api/pricing/estimate`,
+server-side totals in `BookingService`). Migrations: `V2Foundation`, `V2Catering`.
+
+Not built (deliberately dropped for scope, then all of C onward stopped for time):
+C Event Builder draft flow · D messaging · E notifications · F promotions · G reviews ·
+H search/filter · I dashboards · J ownership-authz pass · K new React screens · L extra tests.
+`FUNCTIONAL_SPEC.md` / `WORK_PLAN_V2.md` keep the full plan if work resumes.
 - **Open decision:** choose SQL Server or PostgreSQL before any Data-layer work (affects concurrency-token style and all migrations).
 - **Next step (waiting for approval):** start the Data layer — EF Core packages in `EventBooking.Data`, `Microsoft.EntityFrameworkCore.Design` in `EventBooking.API`, `AppDbContext` with a `DbSet` per entity, Fluent API configs, `SaveChangesAsync` override for the concurrency token (if self-managed), connection string via User Secrets, first migration.
 
