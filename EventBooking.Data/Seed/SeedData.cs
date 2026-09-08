@@ -84,11 +84,19 @@ internal static class SeedData
             new HallSlot { Id = 7, HallId = 3, Date = new DateTime(2026, 10, 5), Shift = ShiftType.Evening, BasePrice = 16000m, Status = SlotStatus.Available, Version = V7 });
 
         // --- extra services (owned by the demo manager) ---
+        // Catering has its own entity (CateringMenu) because its price scales with guest count
+        // and it carries menu data; ExtraService id 1 is a different per-guest add-on.
         modelBuilder.Entity<ExtraService>().HasData(
-            new ExtraService { Id = 1, OwnerUserId = ManagerId, ServiceCategoryId = 1, Pricing = PricingModel.PerGuest, Name = "Catering - Meat Menu", Price = 220m, UnitLabel = "per guest", Description = "Full meat menu, first course to dessert." },
+            new ExtraService { Id = 1, OwnerUserId = ManagerId, ServiceCategoryId = 8, Pricing = PricingModel.PerGuest, Name = "Premium Bar Package", Price = 90m, UnitLabel = "per guest", Description = "Open bar, cocktails and soft drinks." },
             new ExtraService { Id = 2, OwnerUserId = ManagerId, ServiceCategoryId = 6, Pricing = PricingModel.Flat,     Name = "Floral Centerpieces", Price = 180m, UnitLabel = "per table" },
             new ExtraService { Id = 3, OwnerUserId = ManagerId, ServiceCategoryId = 5, Pricing = PricingModel.Flat,     Name = "Live Band", Price = 8000m, UnitLabel = "per event" },
             new ExtraService { Id = 4, OwnerUserId = ManagerId, ServiceCategoryId = 4, Pricing = PricingModel.Flat,     Name = "Photography", Price = 5000m, UnitLabel = "per event" });
+
+        // --- catering menus (owned by the demo manager) ---
+        modelBuilder.Entity<CateringMenu>().HasData(
+            new CateringMenu { Id = 1, OwnerUserId = ManagerId, Name = "Meat Menu", PricePerGuest = 220m, IncludesDrinks = true, Description = "Full meat menu, first course to dessert." },
+            new CateringMenu { Id = 2, OwnerUserId = ManagerId, Name = "Dairy Menu", PricePerGuest = 180m, IsVegetarian = true, IncludesDrinks = true, Description = "Dairy and fish menu." },
+            new CateringMenu { Id = 3, OwnerUserId = ManagerId, Name = "Vegan Menu", PricePerGuest = 160m, IsVegetarian = true, IsVegan = true, Description = "Fully plant-based menu." });
     }
 
     /// <summary>Sensible event-type → service-category offerings.</summary>

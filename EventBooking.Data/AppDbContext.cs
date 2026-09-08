@@ -25,6 +25,7 @@ public class AppDbContext : DbContext
     public DbSet<EventType> EventTypes => Set<EventType>();
     public DbSet<ServiceCategory> ServiceCategories => Set<ServiceCategory>();
     public DbSet<EventTypeServiceCategory> EventTypeServiceCategories => Set<EventTypeServiceCategory>();
+    public DbSet<CateringMenu> CateringMenus => Set<CateringMenu>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

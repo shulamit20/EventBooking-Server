@@ -13,6 +13,9 @@ public class BookingResponse
     public int EventTypeId { get; init; }
     public string EventTypeName { get; init; } = null!;
 
+    public int? CateringMenuId { get; init; }
+    public string? CateringMenuName { get; init; }
+
     public string HostName { get; init; } = null!;
     public int GuestCount { get; init; }
     public string Status { get; init; } = null!;

@@ -12,6 +12,7 @@ public class BookingMappingProfile : Profile
         // and the extra-service lines -> service -> category.
         CreateMap<Booking, BookingResponse>()
             .ForMember(d => d.EventTypeName, o => o.MapFrom(s => s.EventType.Name))
+            .ForMember(d => d.CateringMenuName, o => o.MapFrom(s => s.CateringMenu != null ? s.CateringMenu.Name : null))
             .ForMember(d => d.HallName, o => o.MapFrom(s => s.HallSlot != null ? s.HallSlot.Hall.Name : null))
             .ForMember(d => d.VenueName, o => o.MapFrom(s => s.HallSlot != null ? s.HallSlot.Hall.Venue.Name : null))
             .ForMember(d => d.Date, o => o.MapFrom(s => s.HallSlot != null ? s.HallSlot.Date : (DateTime?)null))

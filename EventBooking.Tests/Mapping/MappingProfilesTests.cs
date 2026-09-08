@@ -18,6 +18,7 @@ public class MappingProfilesTests
             cfg.AddProfile<AuthMappingProfile>();
             cfg.AddProfile<CatalogMappingProfile>();
             cfg.AddProfile<BookingMappingProfile>();
+            cfg.AddProfile<CateringMappingProfile>();
         });
 
         config.AssertConfigurationIsValid();

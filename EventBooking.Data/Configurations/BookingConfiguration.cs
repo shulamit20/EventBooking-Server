@@ -22,6 +22,12 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
                .HasForeignKey(b => b.EventTypeId)
                .OnDelete(DeleteBehavior.Restrict);
 
+        // Booking * -> 0..1 CateringMenu (optional)
+        builder.HasOne(b => b.CateringMenu)
+               .WithMany()
+               .HasForeignKey(b => b.CateringMenuId)
+               .OnDelete(DeleteBehavior.Restrict);
+
         // FKs (HallSlot nullable while Draft, Owner) are configured on the HallSlot / User side.
 
         // Helps the "is this slot already taken?" query.

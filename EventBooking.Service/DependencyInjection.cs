@@ -25,6 +25,8 @@ public static class DependencyInjection
         services.AddScoped<IExtraServiceService, ExtraServiceService>();
         services.AddScoped<IBookingService, BookingService>();
         services.AddScoped<ILookupService, LookupService>();
+        services.AddScoped<ICateringMenuService, CateringMenuService>();
+        services.AddScoped<IPriceCalculationService, PriceCalculationService>();
 
         // Auth. JwtTokenService consumes IOptions<JwtOptions>; the composition root (Program.cs)
         // owns binding + validation of that section.

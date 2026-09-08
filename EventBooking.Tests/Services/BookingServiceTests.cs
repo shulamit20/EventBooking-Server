@@ -5,6 +5,7 @@ using EventBooking.Core.Entities;
 using EventBooking.Core.Enums;
 using EventBooking.Core.Interfaces;
 using EventBooking.Core.Interfaces.Repositories;
+using EventBooking.Core.Interfaces.Services;
 using EventBooking.Service.Services;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -21,20 +22,25 @@ public class BookingServiceTests
 {
     private readonly Mock<IBookingRepository> _bookings = new();
     private readonly Mock<IHallSlotRepository> _slots = new();
-    private readonly Mock<IExtraServiceRepository> _extras = new();
     private readonly Mock<ILookupRepository> _lookups = new();
+    private readonly Mock<IPriceCalculationService> _price = new();
     private readonly Mock<IUnitOfWork> _uow = new();
     private readonly Mock<IMapper> _mapper = new();
 
     private BookingService CreateSut() => new(
-        _bookings.Object, _slots.Object, _extras.Object, _lookups.Object, _uow.Object, _mapper.Object,
+        _bookings.Object, _slots.Object, _lookups.Object, _price.Object, _uow.Object, _mapper.Object,
         NullLogger<BookingService>.Instance);
 
     public BookingServiceTests()
     {
-        // Event type 1 exists unless a test overrides it.
         _lookups.Setup(l => l.EventTypeExistsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
+
+        // Pricing succeeds with an empty breakdown unless a test overrides it.
+        _price.Setup(p => p.CalculateAsync(
+                It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int?>(),
+                It.IsAny<IReadOnlyList<BookingExtraServiceRequest>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<PriceBreakdownResponse>.Ok(new PriceBreakdownResponse { Total = 8000m }));
     }
 
     private static HallSlot AvailableSlot(int id = 5) =>
@@ -129,18 +135,17 @@ public class BookingServiceTests
     }
 
     [Fact]
-    public async Task CreateAsync_WhenARequestedExtraServiceDoesNotExist_ReturnsInvalid()
+    public async Task CreateAsync_WhenPricingRejectsTheSelection_ForwardsThatFailure()
     {
         var slot = AvailableSlot();
         _slots.Setup(r => r.GetByIdAsync(slot.Id, It.IsAny<CancellationToken>())).ReturnsAsync(slot);
         _bookings.Setup(r => r.HasActiveBookingForSlotAsync(slot.Id, It.IsAny<CancellationToken>())).ReturnsAsync(false);
-        _extras.Setup(r => r.GetByIdsAsync(It.IsAny<IEnumerable<int>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<ExtraService>());
+        _price.Setup(p => p.CalculateAsync(
+                It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int?>(),
+                It.IsAny<IReadOnlyList<BookingExtraServiceRequest>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result<PriceBreakdownResponse>.Invalid("One or more extra services do not exist."));
 
-        var request = Request(slot.Id);
-        request.ExtraServices.Add(new BookingExtraServiceRequest { ExtraServiceId = 99, Quantity = 1 });
-
-        var result = await CreateSut().CreateAsync(request, _user);
+        var result = await CreateSut().CreateAsync(Request(slot.Id), _user);
 
         Assert.Equal(ResultStatus.Invalid, result.Status);
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);

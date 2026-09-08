@@ -11,6 +11,9 @@ public class CreateBookingRequest
     [Required]
     public int EventTypeId { get; set; }
 
+    /// <summary>Optional catering package. Priced per guest on the server.</summary>
+    public int? CateringMenuId { get; set; }
+
     [Required, StringLength(200)]
     public string HostName { get; set; } = null!;
 

@@ -24,6 +24,10 @@ public class Booking
     public int EventTypeId { get; set; }
     public EventType EventType { get; set; } = null!;
 
+    // Foreign key: Booking * -> 0..1 CateringMenu (optional)
+    public int? CateringMenuId { get; set; }
+    public CateringMenu? CateringMenu { get; set; }
+
     public string HostName { get; set; } = null!;
     public int GuestCount { get; set; }
 

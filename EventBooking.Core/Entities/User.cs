@@ -22,4 +22,5 @@ public class User
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();          // as customer
     public ICollection<Venue> OwnedVenues { get; set; } = new List<Venue>();           // as manager
     public ICollection<ExtraService> OwnedServices { get; set; } = new List<ExtraService>(); // as manager
+    public ICollection<CateringMenu> OwnedCateringMenus { get; set; } = new List<CateringMenu>(); // as manager
 }

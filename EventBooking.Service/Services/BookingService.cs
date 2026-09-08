@@ -17,8 +17,8 @@ public class BookingService : IBookingService
 {
     private readonly IBookingRepository _bookings;
     private readonly IHallSlotRepository _slots;
-    private readonly IExtraServiceRepository _extras;
     private readonly ILookupRepository _lookups;
+    private readonly IPriceCalculationService _price;
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
     private readonly ILogger<BookingService> _logger;
@@ -26,16 +26,16 @@ public class BookingService : IBookingService
     public BookingService(
         IBookingRepository bookings,
         IHallSlotRepository slots,
-        IExtraServiceRepository extras,
         ILookupRepository lookups,
+        IPriceCalculationService price,
         IUnitOfWork uow,
         IMapper mapper,
         ILogger<BookingService> logger)
     {
         _bookings = bookings;
         _slots = slots;
-        _extras = extras;
         _lookups = lookups;
+        _price = price;
         _uow = uow;
         _mapper = mapper;
         _logger = logger;
@@ -76,34 +76,22 @@ public class BookingService : IBookingService
             return Result<BookingResponse>.Conflict("This slot is no longer available.");
         }
 
-        // 3. Resolve the requested extra services in one query; snapshot their prices.
-        var requestedIds = request.ExtraServices.Select(x => x.ExtraServiceId).Distinct().ToList();
-        if (requestedIds.Count != request.ExtraServices.Count)
-            return Result<BookingResponse>.Invalid("The same extra service is listed more than once.");
+        // 3. Price the whole selection server-side (also validates catering + extra services).
+        //    Any total the client sent is ignored.
+        var priced = await _price.CalculateAsync(
+            slot.Id, request.GuestCount, request.CateringMenuId, request.ExtraServices, ct);
+        if (!priced.IsSuccess)
+            return Result<BookingResponse>.Failure(priced);
 
-        var services = requestedIds.Count == 0
-            ? new List<ExtraService>()
-            : (await _extras.GetByIdsAsync(requestedIds, ct)).ToList();
+        var breakdown = priced.Value!;
 
-        if (services.Count != requestedIds.Count)
-            return Result<BookingResponse>.Invalid("One or more extra services do not exist.");
-
-        // 4. Build the booking. Line totals + grand total are computed here from DB prices —
-        //    any total the client sent is ignored.
-        var lines = request.ExtraServices.Select(line =>
+        // 4. Build the booking from the priced breakdown (snapshot every amount).
+        var lines = breakdown.ServiceLines.Select(l => new BookingExtraService
         {
-            var svc = services.First(s => s.Id == line.ExtraServiceId);
-            var lineTotal = svc.Pricing == PricingModel.PerGuest
-                ? svc.Price * request.GuestCount
-                : svc.Price * line.Quantity;
-
-            return new BookingExtraService
-            {
-                ExtraServiceId = svc.Id,
-                Quantity = line.Quantity,
-                PriceAtBooking = svc.Price,
-                LineTotal = lineTotal,
-            };
+            ExtraServiceId = l.ExtraServiceId,
+            Quantity = l.Quantity,
+            PriceAtBooking = l.UnitPrice,
+            LineTotal = l.LineTotal,
         }).ToList();
 
         var booking = new Booking
@@ -111,12 +99,13 @@ public class BookingService : IBookingService
             HallSlotId = slot.Id,
             OwnerUserId = currentUserId,
             EventTypeId = request.EventTypeId,
+            CateringMenuId = request.CateringMenuId,
             HostName = request.HostName,
             GuestCount = request.GuestCount,
             Status = BookingStatus.Pending,
             CreatedAtUtc = DateTime.UtcNow,
             Notes = request.Notes,
-            TotalPrice = slot.BasePrice + lines.Sum(l => l.LineTotal),
+            TotalPrice = breakdown.Total,
             BookingExtraServices = lines,
         };
 

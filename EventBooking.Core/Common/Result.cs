@@ -44,6 +44,12 @@ public class Result<T> : Result
     private Result(ResultStatus status, string? error) : base(status, error) => Value = default;
 
     public static Result<T> Ok(T value) => new(value);
+
+    /// <summary>Re-wraps another result's failure as this payload type (same status + message).</summary>
+    public static Result<T> Failure(Result source) => source.IsSuccess
+        ? throw new InvalidOperationException("Cannot forward a successful result as a failure.")
+        : new Result<T>(source.Status, source.Error);
+
     public static new Result<T> NotFound(string error) => new(ResultStatus.NotFound, error);
     public static new Result<T> Invalid(string error) => new(ResultStatus.Invalid, error);
     public static new Result<T> Conflict(string error) => new(ResultStatus.Conflict, error);
