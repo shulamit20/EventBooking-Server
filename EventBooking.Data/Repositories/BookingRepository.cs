@@ -62,7 +62,8 @@ public class BookingRepository : IBookingRepository
     /// </summary>
     private IQueryable<Booking> DetailedQuery() =>
         _context.Bookings.AsNoTracking()
-            .Include(b => b.HallSlot).ThenInclude(s => s.Hall).ThenInclude(h => h.Venue)
-            .Include(b => b.BookingExtraServices).ThenInclude(x => x.ExtraService)
+            .Include(b => b.EventType)
+            .Include(b => b.HallSlot!).ThenInclude(s => s.Hall).ThenInclude(h => h.Venue)
+            .Include(b => b.BookingExtraServices).ThenInclude(x => x.ExtraService).ThenInclude(e => e.ServiceCategory)
             .AsSplitQuery();
 }

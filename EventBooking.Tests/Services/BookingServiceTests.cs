@@ -22,12 +22,20 @@ public class BookingServiceTests
     private readonly Mock<IBookingRepository> _bookings = new();
     private readonly Mock<IHallSlotRepository> _slots = new();
     private readonly Mock<IExtraServiceRepository> _extras = new();
+    private readonly Mock<ILookupRepository> _lookups = new();
     private readonly Mock<IUnitOfWork> _uow = new();
     private readonly Mock<IMapper> _mapper = new();
 
     private BookingService CreateSut() => new(
-        _bookings.Object, _slots.Object, _extras.Object, _uow.Object, _mapper.Object,
+        _bookings.Object, _slots.Object, _extras.Object, _lookups.Object, _uow.Object, _mapper.Object,
         NullLogger<BookingService>.Instance);
+
+    public BookingServiceTests()
+    {
+        // Event type 1 exists unless a test overrides it.
+        _lookups.Setup(l => l.EventTypeExistsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+    }
 
     private static HallSlot AvailableSlot(int id = 5) =>
         new() { Id = id, HallId = 2, Date = new DateTime(2026, 10, 1), Shift = ShiftType.Evening, BasePrice = 8000m, Status = SlotStatus.Available };
@@ -35,7 +43,7 @@ public class BookingServiceTests
     private static CreateBookingRequest Request(int slotId = 5) => new()
     {
         HallSlotId = slotId,
-        EventType = "Wedding",
+        EventTypeId = 1,
         HostName = "Cohen",
         GuestCount = 150,
         ExtraServices = new()

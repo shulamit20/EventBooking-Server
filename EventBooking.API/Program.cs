@@ -117,9 +117,6 @@ try
 
     app.MapControllers();
 
-    // Seed the demo accounts (needs the password hasher, so it cannot live in a migration).
-    await app.SeedDemoUsersAsync();
-
     app.Run();
 }
 catch (HostAbortedException)

@@ -22,6 +22,9 @@ public class AppDbContext : DbContext
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<ExtraService> ExtraServices => Set<ExtraService>();
     public DbSet<BookingExtraService> BookingExtraServices => Set<BookingExtraService>();
+    public DbSet<EventType> EventTypes => Set<EventType>();
+    public DbSet<ServiceCategory> ServiceCategories => Set<ServiceCategory>();
+    public DbSet<EventTypeServiceCategory> EventTypeServiceCategories => Set<EventTypeServiceCategory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

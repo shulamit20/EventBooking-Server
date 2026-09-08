@@ -61,5 +61,15 @@ public class CreateExtraServiceRequest
     [Required, StringLength(200)] public string Name { get; set; } = null!;
     [StringLength(1000)] public string? Description { get; set; }
     [Range(0, 1_000_000)] public decimal Price { get; set; }
+
+    [Required] public int ServiceCategoryId { get; set; }
+
+    [EnumDataType(typeof(PricingModel))]
+    public PricingModel Pricing { get; set; } = PricingModel.Flat;
+
     [StringLength(50)] public string? UnitLabel { get; set; }
+    [StringLength(500)] public string? ImageUrl { get; set; }
+    public bool IsActive { get; set; } = true;
 }
+
+public class UpdateExtraServiceRequest : CreateExtraServiceRequest { }

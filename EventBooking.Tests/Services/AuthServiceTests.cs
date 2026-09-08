@@ -57,7 +57,7 @@ public class AuthServiceTests
     public async Task LoginAsync_WithCorrectCredentials_ReturnsAToken()
     {
         _users.Setup(r => r.GetByEmailAsync("a@x.com", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new User { Email = "a@x.com", PasswordHash = "hash", Role = UserRole.Client });
+            .ReturnsAsync(new User { Email = "a@x.com", PasswordHash = "hash", Role = UserRole.Customer });
         _hasher.Setup(h => h.Verify("good", "hash")).Returns(true);
 
         var result = await CreateSut().LoginAsync(new LoginRequest { Email = "a@x.com", Password = "good" });
@@ -99,7 +99,7 @@ public class AuthServiceTests
         Assert.NotNull(added);
         Assert.Equal("new@x.com", added!.Email);          // normalised to lower-case
         Assert.Equal("hashed", added.PasswordHash);        // stored the hash, not the plain text
-        Assert.Equal(UserRole.Client, added.Role);         // self-registration is always a Client
+        Assert.Equal(UserRole.Customer, added.Role);         // self-registration is always a Client
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

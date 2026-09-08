@@ -27,7 +27,7 @@ public class ExtraServicesController : ApiControllerBase
     public async Task<ActionResult<ExtraServiceResponse>> Create(
         [FromBody] CreateExtraServiceRequest request, CancellationToken ct)
     {
-        var result = await _extras.CreateAsync(request, ct);
+        var result = await _extras.CreateAsync(request, CurrentUserId, ct);
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetAll), routeValues: null, value: result.Value)
             : ErrorResult(result);

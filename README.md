@@ -4,7 +4,7 @@
 
 EventBooking is a layered ASP.NET Core 8 Web API for booking event halls (weddings, bar/bat
 mitzvahs, conferences). A **Manager** maintains the catalog — venues, halls, and the dated
-time-slots each hall offers — and reviews bookings. A **Client** registers, browses available
+time-slots each hall offers — and reviews bookings. A **Customer** registers, browses available
 slots, and books one, optionally adding extra services (catering, photography, …). Each booking
 carries a price snapshot so later catalog price changes never rewrite history.
 
@@ -83,10 +83,9 @@ The non-secret JWT settings (`Issuer`, `Audience`, `ExpiryMinutes`) are already 
 dotnet ef database update -p EventBooking.Data -s EventBooking.API
 ```
 
-This applies both migrations (`Init`, then `AddBookingOwnerCreatedAtIndex`), creating
-`EventBookingDb` with all 7 tables + `__EFMigrationsHistory` and the catalog seed (2 venues,
-3 halls, 7 hall slots, 4 extra services). Demo user accounts are **not** in the migration (they
-need the runtime password hasher) — they are inserted on first startup, see below.
+This applies all migrations and seeds `EventBookingDb`: the three demo accounts (one per role),
+7 event types, 8 service categories, 2 venues, 3 halls, 7 hall slots, 4 extra services — so the
+system is fully usable right after this command, with no manual inserts.
 
 ## Run
 
@@ -100,14 +99,13 @@ or press **F5** in Visual Studio with `EventBooking.API` as the startup project.
 - HTTPS: <https://localhost:7021>
 - Swagger UI opens at `/swagger`.
 
-On startup the app seeds the two demo accounts if they are missing (`DemoUserSeeder`).
-
 ## Demo users
 
 | Role | Email | Password |
 |---|---|---|
 | Manager | `manager@eventbooking.local` | `Passw0rd!` |
-| Client | `client@eventbooking.local` | `Passw0rd!` |
+| Customer | `client@eventbooking.local` | `Passw0rd!` |
+| Admin | `admin@eventbooking.local` | `Passw0rd!` |
 
 **How to authenticate in Swagger:** call `POST /api/auth/login` with one of the pairs above,
 copy the `token` from the response, click **Authorize** (top-right), paste the token, and call
@@ -115,7 +113,7 @@ protected endpoints.
 
 ## Roles and permissions
 
-| Area | Anonymous | Client | Manager |
+| Area | Anonymous | Customer | Manager |
 |---|---|---|---|
 | `POST /api/auth/register`, `/login` | ✅ | ✅ | ✅ |
 | Browse venues / halls / hall-slots / extra-services (`GET`) | ✅ | ✅ | ✅ |
@@ -132,7 +130,7 @@ Missing/invalid token → `401`; valid token, wrong role → `403`.
 
 1. `POST /api/auth/login` as the client → copy token, Authorize.
 2. `GET /api/hall-slots?status=Available` → pick an `id`.
-3. `POST /api/bookings` `{ "hallSlotId": <id>, "eventType": "Wedding", "hostName": "Cohen", "guestCount": 150, "extraServices": [] }` → `201 Created`.
+3. `POST /api/bookings` `{ "hallSlotId": <id>, "eventTypeId": 1, "hostName": "Cohen", "guestCount": 150, "extraServices": [] }` → `201 Created`.
 4. `POST /api/bookings` again with the same `hallSlotId` → **`409 Conflict`**.
 
 ## Project structure
@@ -164,7 +162,7 @@ Coverage:
   reloading first makes the next update succeed.
 - **`AuthServiceTests`** — login rejects an unknown email / wrong password with `Unauthorized`;
   register rejects a taken email with `Conflict`; a successful register hashes the password,
-  forces the `Client` role, and saves.
+  forces the `Customer` role, and saves.
 - **`MappingProfilesTests`** — `AssertConfigurationIsValid()` over all three AutoMapper profiles.
 
 ## Middleware & logging

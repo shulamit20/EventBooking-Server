@@ -16,6 +16,7 @@ public class BookingExtraServiceConfiguration : IEntityTypeConfiguration<Booking
         builder.HasKey(bes => new { bes.BookingId, bes.ExtraServiceId });
 
         builder.Property(bes => bes.PriceAtBooking).HasPrecision(10, 2);
+        builder.Property(bes => bes.LineTotal).HasPrecision(12, 2);
 
         builder.HasOne(bes => bes.Booking)
                .WithMany(b => b.BookingExtraServices)

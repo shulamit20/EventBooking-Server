@@ -8,8 +8,8 @@ public class CreateBookingRequest
     [Required]
     public int HallSlotId { get; set; }
 
-    [Required, StringLength(100)]
-    public string EventType { get; set; } = null!;
+    [Required]
+    public int EventTypeId { get; set; }
 
     [Required, StringLength(200)]
     public string HostName { get; set; } = null!;

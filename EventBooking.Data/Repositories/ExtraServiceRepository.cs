@@ -12,6 +12,8 @@ public class ExtraServiceRepository : IExtraServiceRepository
 
     public async Task<IReadOnlyList<ExtraService>> GetAllAsync(CancellationToken ct = default) =>
         await _context.ExtraServices.AsNoTracking()
+            .Include(e => e.ServiceCategory)
+            .Where(e => e.IsActive)
             .OrderBy(e => e.Name)
             .ToListAsync(ct);
 
@@ -22,6 +24,7 @@ public class ExtraServiceRepository : IExtraServiceRepository
 
         // One IN (...) query for all requested services - the booking service needs their prices.
         return await _context.ExtraServices.AsNoTracking()
+            .Include(e => e.ServiceCategory)
             .Where(e => idList.Contains(e.Id))
             .ToListAsync(ct);
     }

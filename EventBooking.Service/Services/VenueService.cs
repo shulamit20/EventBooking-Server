@@ -45,9 +45,11 @@ public class VenueService : IVenueService
             : Result<VenueResponse>.Ok(_mapper.Map<VenueResponse>(venue));
     }
 
-    public async Task<Result<VenueResponse>> CreateAsync(CreateVenueRequest request, CancellationToken ct = default)
+    public async Task<Result<VenueResponse>> CreateAsync(
+        CreateVenueRequest request, Guid ownerUserId, CancellationToken ct = default)
     {
         var venue = _mapper.Map<Venue>(request);
+        venue.OwnerUserId = ownerUserId;   // the manager who created it owns it
 
         await _venues.AddAsync(venue, ct);
         await _uow.SaveChangesAsync(ct);

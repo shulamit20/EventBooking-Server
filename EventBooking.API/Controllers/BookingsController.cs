@@ -23,7 +23,7 @@ public class BookingsController : ApiControllerBase
     /// (optimistic concurrency on <c>HallSlot.Version</c>).
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Client")]
+    [Authorize(Roles = "Customer")]
     [ProducesResponseType(typeof(BookingResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -58,7 +58,7 @@ public class BookingsController : ApiControllerBase
 
     /// <summary>A Client cancels their own booking; the slot is released. 204 on success.</summary>
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Client")]
+    [Authorize(Roles = "Customer")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

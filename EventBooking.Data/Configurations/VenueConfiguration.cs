@@ -17,6 +17,13 @@ public class VenueConfiguration : IEntityTypeConfiguration<Venue>
         builder.Property(v => v.ContactPhone).HasMaxLength(30);
         builder.Property(v => v.Description).HasMaxLength(1000);
 
+        // Venue * -> 1 User (the Manager who owns it)
+        builder.HasOne(v => v.Owner)
+               .WithMany(u => u.OwnedVenues)
+               .HasForeignKey(v => v.OwnerUserId)
+               .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(v => v.OwnerUserId);
+
         // One-to-many: Venue 1 -> * Hall. Configured fully on the Hall side.
         builder.HasMany(v => v.Halls)
                .WithOne(h => h.Venue)

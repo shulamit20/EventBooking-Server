@@ -14,10 +14,12 @@ public class User
 
     public string DisplayName { get; set; } = null!;
 
-    public UserRole Role { get; set; } = UserRole.Client;
+    public UserRole Role { get; set; } = UserRole.Customer;
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
-    // Navigation: User 1 -> * Booking
-    public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+    // Navigation
+    public ICollection<Booking> Bookings { get; set; } = new List<Booking>();          // as customer
+    public ICollection<Venue> OwnedVenues { get; set; } = new List<Venue>();           // as manager
+    public ICollection<ExtraService> OwnedServices { get; set; } = new List<ExtraService>(); // as manager
 }

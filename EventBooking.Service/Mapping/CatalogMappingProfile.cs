@@ -22,18 +22,30 @@ public class CatalogMappingProfile : Profile
             .ForMember(d => d.Shift, o => o.MapFrom(s => s.Shift.ToString()))
             .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()));
 
-        CreateMap<ExtraService, ExtraServiceResponse>();
+        CreateMap<ExtraService, ExtraServiceResponse>()
+            .ForMember(d => d.Pricing, o => o.MapFrom(s => s.Pricing.ToString()))
+            .ForMember(d => d.Category, o => o.MapFrom(s => s.ServiceCategory.Name));
+
+        CreateMap<EventType, EventTypeResponse>()
+            .ForMember(d => d.ServiceCategoryIds,
+                o => o.MapFrom(s => s.ServiceCategories.Select(x => x.ServiceCategoryId)));
+
+        CreateMap<ServiceCategory, ServiceCategoryResponse>();
 
         // ---- request -> entity ----
-        // Ids are database-generated, navigation properties and status/version are set by
-        // the service or defaults, so they are explicitly ignored (keeps config validation clean).
+        // Ids are database-generated; navigation properties, status/version and the owner are
+        // set by the service or by defaults, so they are explicitly ignored.
 
         CreateMap<CreateVenueRequest, Venue>()
             .ForMember(d => d.Id, o => o.Ignore())
+            .ForMember(d => d.OwnerUserId, o => o.Ignore())
+            .ForMember(d => d.Owner, o => o.Ignore())
             .ForMember(d => d.Halls, o => o.Ignore());
 
         CreateMap<UpdateVenueRequest, Venue>()
             .ForMember(d => d.Id, o => o.Ignore())
+            .ForMember(d => d.OwnerUserId, o => o.Ignore())
+            .ForMember(d => d.Owner, o => o.Ignore())
             .ForMember(d => d.Halls, o => o.Ignore());
 
         CreateMap<CreateHallRequest, Hall>()
@@ -50,6 +62,16 @@ public class CatalogMappingProfile : Profile
 
         CreateMap<CreateExtraServiceRequest, ExtraService>()
             .ForMember(d => d.Id, o => o.Ignore())
+            .ForMember(d => d.OwnerUserId, o => o.Ignore())
+            .ForMember(d => d.Owner, o => o.Ignore())
+            .ForMember(d => d.ServiceCategory, o => o.Ignore())
+            .ForMember(d => d.BookingExtraServices, o => o.Ignore());
+
+        CreateMap<UpdateExtraServiceRequest, ExtraService>()
+            .ForMember(d => d.Id, o => o.Ignore())
+            .ForMember(d => d.OwnerUserId, o => o.Ignore())
+            .ForMember(d => d.Owner, o => o.Ignore())
+            .ForMember(d => d.ServiceCategory, o => o.Ignore())
             .ForMember(d => d.BookingExtraServices, o => o.Ignore());
     }
 }

@@ -11,12 +11,18 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
     {
         builder.HasKey(b => b.Id);
 
-        builder.Property(b => b.EventType).IsRequired().HasMaxLength(100);
         builder.Property(b => b.HostName).IsRequired().HasMaxLength(200);
         builder.Property(b => b.Status).HasConversion<string>().HasMaxLength(20);
         builder.Property(b => b.Notes).HasMaxLength(2000);
+        builder.Property(b => b.TotalPrice).HasPrecision(12, 2);
 
-        // FKs (HallSlot, Owner) are configured on the HallSlot / User side.
+        // Booking * -> 1 EventType (lookup)
+        builder.HasOne(b => b.EventType)
+               .WithMany(t => t.Bookings)
+               .HasForeignKey(b => b.EventTypeId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+        // FKs (HallSlot nullable while Draft, Owner) are configured on the HallSlot / User side.
 
         // Helps the "is this slot already taken?" query.
         builder.HasIndex(b => new { b.HallSlotId, b.Status });

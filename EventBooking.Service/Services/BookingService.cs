@@ -18,6 +18,7 @@ public class BookingService : IBookingService
     private readonly IBookingRepository _bookings;
     private readonly IHallSlotRepository _slots;
     private readonly IExtraServiceRepository _extras;
+    private readonly ILookupRepository _lookups;
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
     private readonly ILogger<BookingService> _logger;
@@ -26,6 +27,7 @@ public class BookingService : IBookingService
         IBookingRepository bookings,
         IHallSlotRepository slots,
         IExtraServiceRepository extras,
+        ILookupRepository lookups,
         IUnitOfWork uow,
         IMapper mapper,
         ILogger<BookingService> logger)
@@ -33,6 +35,7 @@ public class BookingService : IBookingService
         _bookings = bookings;
         _slots = slots;
         _extras = extras;
+        _lookups = lookups;
         _uow = uow;
         _mapper = mapper;
         _logger = logger;
@@ -51,6 +54,9 @@ public class BookingService : IBookingService
         var slot = await _slots.GetByIdAsync(request.HallSlotId, ct);
         if (slot is null)
             return Result<BookingResponse>.NotFound($"Hall slot {request.HallSlotId} was not found.");
+
+        if (!await _lookups.EventTypeExistsAsync(request.EventTypeId, ct))
+            return Result<BookingResponse>.Invalid($"Event type {request.EventTypeId} does not exist.");
 
         // 2. Business check (state-dependent -> lives here, not in the controller).
         //    A slot that is already taken is a resource collision -> log at Warning (Part D).
@@ -82,27 +88,36 @@ public class BookingService : IBookingService
         if (services.Count != requestedIds.Count)
             return Result<BookingResponse>.Invalid("One or more extra services do not exist.");
 
-        // 4. Build the booking with a price snapshot per line.
+        // 4. Build the booking. Line totals + grand total are computed here from DB prices —
+        //    any total the client sent is ignored.
+        var lines = request.ExtraServices.Select(line =>
+        {
+            var svc = services.First(s => s.Id == line.ExtraServiceId);
+            var lineTotal = svc.Pricing == PricingModel.PerGuest
+                ? svc.Price * request.GuestCount
+                : svc.Price * line.Quantity;
+
+            return new BookingExtraService
+            {
+                ExtraServiceId = svc.Id,
+                Quantity = line.Quantity,
+                PriceAtBooking = svc.Price,
+                LineTotal = lineTotal,
+            };
+        }).ToList();
+
         var booking = new Booking
         {
             HallSlotId = slot.Id,
             OwnerUserId = currentUserId,
-            EventType = request.EventType,
+            EventTypeId = request.EventTypeId,
             HostName = request.HostName,
             GuestCount = request.GuestCount,
             Status = BookingStatus.Pending,
             CreatedAtUtc = DateTime.UtcNow,
             Notes = request.Notes,
-            BookingExtraServices = request.ExtraServices.Select(line =>
-            {
-                var svc = services.First(s => s.Id == line.ExtraServiceId);
-                return new BookingExtraService
-                {
-                    ExtraServiceId = svc.Id,
-                    Quantity = line.Quantity,
-                    PriceAtBooking = svc.Price
-                };
-            }).ToList()
+            TotalPrice = slot.BasePrice + lines.Sum(l => l.LineTotal),
+            BookingExtraServices = lines,
         };
 
         // 5. Take the slot (mutation on the tracked entity).
@@ -168,7 +183,8 @@ public class BookingService : IBookingService
             return Result<BookingResponse>.Invalid("This booking is already cancelled.");
 
         booking.Status = BookingStatus.Cancelled;
-        await ReleaseSlotAsync(booking.HallSlotId, ct);
+        if (booking.HallSlotId is int slotId)
+            await ReleaseSlotAsync(slotId, ct);
 
         var conflict = await CommitAsync(id, ct);
         if (conflict is not null) return conflict;
@@ -179,6 +195,9 @@ public class BookingService : IBookingService
 
     public async Task<Result<BookingResponse>> SetStatusAsync(int id, BookingStatus status, CancellationToken ct = default)
     {
+        if (status == BookingStatus.Draft)
+            return Result<BookingResponse>.Invalid("A booking cannot be moved back to Draft.");
+
         var booking = await _bookings.GetByIdAsync(id, ct); // tracked
         if (booking is null)
             return Result<BookingResponse>.NotFound($"Booking {id} was not found.");
@@ -187,12 +206,14 @@ public class BookingService : IBookingService
         {
             case BookingStatus.Confirmed:
                 booking.Status = BookingStatus.Confirmed;
-                await SetSlotStatusAsync(booking.HallSlotId, SlotStatus.Booked, ct);
+                if (booking.HallSlotId is int confirmSlot)
+                    await SetSlotStatusAsync(confirmSlot, SlotStatus.Booked, ct);
                 break;
 
             case BookingStatus.Cancelled:
                 booking.Status = BookingStatus.Cancelled;
-                await ReleaseSlotAsync(booking.HallSlotId, ct);
+                if (booking.HallSlotId is int cancelSlot)
+                    await ReleaseSlotAsync(cancelSlot, ct);
                 break;
 
             case BookingStatus.Pending:

@@ -34,7 +34,7 @@ public class VenuesController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<VenueResponse>> Create([FromBody] CreateVenueRequest request, CancellationToken ct)
     {
-        var result = await _venues.CreateAsync(request, ct);
+        var result = await _venues.CreateAsync(request, CurrentUserId, ct);
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value)
             : ErrorResult(result);

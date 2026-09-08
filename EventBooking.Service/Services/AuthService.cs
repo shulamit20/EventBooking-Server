@@ -45,7 +45,7 @@ public class AuthService : IAuthService
             Email = email,
             DisplayName = request.DisplayName.Trim(),
             PasswordHash = _hasher.Hash(request.Password),
-            Role = UserRole.Client   // self-registration is always a Client; Managers are seeded
+            Role = UserRole.Customer   // self-registration is always a Customer; Managers/Admins are seeded
         };
 
         await _users.AddAsync(user, ct);

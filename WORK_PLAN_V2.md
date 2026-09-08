@@ -8,39 +8,44 @@ Legend: **new** = new file/entity · **mod** = change to existing code.
 
 ---
 
-## Open decisions (settle before Phase A)
+## Decisions (settled 2026-09-08)
 
-1. **Role name** — spec says Customer/Manager/Admin; code has `Client`/`Manager`.
-   → *Recommended:* rename `UserRole.Client` → `Customer`, add `Admin`. (Touches JWT claims,
-   seed users, tests, client — all small.)
-2. **Event Builder** — a server-side **draft `Booking`** (`BookingStatus.Draft`, no slot taken
-   until "confirm"), or a **client-only wizard** that collects everything then does one existing
-   `POST /api/bookings`?
-   → *Recommended:* draft Booking. It gives "My Events" vs "My Bookings" + price estimates for
-   free, and "confirm" reuses the existing concurrency take → 409. Small, not "advanced".
-3. **Venue ownership** — add `Venue.OwnerUserId` so a Manager owns venues (needed for §13/§16
-   "manage only their own"). → *Recommended:* yes, in Phase A.
-4. **React data layer** — spec §17 mentions React Query; current client uses plain `fetch`.
-   → *Recommended:* keep plain `fetch` + small hooks (simpler to explain); revisit only if it
-   gets painful.
+1. **Role name** — rename `UserRole.Client` → `Customer`, add `Admin`.
+2. **Event Builder** — server-side **draft `Booking`** (`BookingStatus.Draft`, no slot taken
+   until "confirm"; "confirm" reuses the existing concurrency take → 409).
+3. **Venue ownership** — add `Venue.OwnerUserId`.
+4. **React data layer** — keep plain `fetch` (simpler to explain), no React Query.
+5. **enum vs lookup table** — enum ONLY where code branches on the value:
+   `BookingStatus`, `SlotStatus`, `UserRole`, `NotificationType`, and a new
+   `PricingModel { Flat, PerGuest }` (the price calculator switches on it).
+   Everything the business manages as content is a **lookup table**:
+   `EventType`, `ServiceCategory` (+ `EventTypeServiceCategory` link), `CateringMenu`,
+   `Promotion`. So the platform is extensible without a redeploy.
 
 ---
 
 ## Phase A — Domain foundation + roles  *(1 migration)*
 
-- **A1** `EventType` enum (Wedding, BarMitzvah, BatMitzvah, CorporateEvent, Birthday,
-  PrivateEvent, Other) — **new** in Core.
-- **A2** `ServiceType` enum (Catering, TableDesign, BridalChair, Photography, DJ, Flowers,
-  Lighting, Other) — **new** in Core. Extend `ExtraService` — **mod**: `ServiceType`,
-  `ImageUrl`, `IsActive`, `OwnerUserId` (Manager who owns it) + Fluent config + `User` 1→*
-  `ExtraService`.
-- **A3** `Booking.EventType` `string` → `EventType` enum — **mod**. Add `BookingStatus.Draft`.
-- **A4** `UserRole`: add `Admin`; rename `Client` → `Customer` (decision 1). Update JWT, seed,
-  demo users (+ an Admin demo user), tests.
-- **A5** `Venue.OwnerUserId` (decision 3) — **mod** + config.
-- **A6** Migration `V2Foundation` + seed update (service types on the 4 seeded services, Admin
-  user note). `dotnet ef database update`.
-- **DoD:** build green, tests green (existing concurrency test unchanged), DB updated.
+- **A1** `UserRole` — **mod**: rename `Client` → `Customer`, add `Admin`. Propagate:
+  `JwtTokenService` (auto), `DemoUserSeeder` (+ Admin demo user, fix existing rows' role),
+  `BookingsController` `[Authorize(Roles=...)]`, `AuthServiceTests`, React (`Nav.jsx`,
+  `SlotsPage.jsx`), READMEs.
+- **A2** `PricingModel` enum (`Flat`, `PerGuest`) — **new** in Core.
+- **A3** `EventType` lookup entity (`Id`, `Name`, `Description`, `IsActive`) — **new** + config
+  + `HasData` seed (Wedding, BarMitzvah, BatMitzvah, CorporateEvent, Birthday, PrivateEvent,
+  Other).
+- **A4** `ServiceCategory` lookup entity (`Id`, `Code`, `Name`, `IsActive`) — **new** + config
+  + seed (Catering, TableDesign, BridalChair, Photography, DJ, Flowers, Lighting, Other).
+  `EventTypeServiceCategory` link entity (composite key) + seed the sensible pairs.
+- **A5** `ExtraService` — **mod**: `ServiceCategoryId` FK, `PricingModel`, `ImageUrl`,
+  `IsActive`, `OwnerUserId` (Manager). Config + `User` 1→* `ExtraService`,
+  `ServiceCategory` 1→* `ExtraService`. Update seed rows + AutoMapper + DTOs.
+- **A6** `Booking` — **mod**: `EventType` `string` → `EventTypeId` FK. Add `BookingStatus.Draft`.
+  Update `CreateBookingRequest`/responses/mapping/`BookingService`.
+- **A7** `Venue` — **mod**: `OwnerUserId` FK + config.
+- **A8** Migration `V2Foundation` + `dotnet ef database update`. Fix demo-user roles at startup.
+- **DoD:** build green, `dotnet test` green (existing concurrency test unchanged), DB updated,
+  server + client still run.
 
 ## Phase B — Catering + server-side price calculation
 

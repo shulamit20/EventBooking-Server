@@ -10,7 +10,7 @@ public interface IVenueService
 {
     Task<PagedResult<VenueResponse>> GetPagedAsync(PageQuery query, CancellationToken ct = default);
     Task<Result<VenueResponse>> GetByIdAsync(int id, CancellationToken ct = default);
-    Task<Result<VenueResponse>> CreateAsync(CreateVenueRequest request, CancellationToken ct = default);
+    Task<Result<VenueResponse>> CreateAsync(CreateVenueRequest request, Guid ownerUserId, CancellationToken ct = default);
     Task<Result<VenueResponse>> UpdateAsync(int id, UpdateVenueRequest request, CancellationToken ct = default);
     Task<Result> DeleteAsync(int id, CancellationToken ct = default);
 }
