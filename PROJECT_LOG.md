@@ -441,6 +441,14 @@ Not built (deliberately dropped for scope, then all of C onward stopped for time
 C Event Builder draft flow · D messaging · E notifications · F promotions · G reviews ·
 H search/filter · I dashboards · J ownership-authz pass · K new React screens · L extra tests.
 `FUNCTIONAL_SPEC.md` / `WORK_PLAN_V2.md` keep the full plan if work resumes.
+
+### 2026-09-08 — cleanup: removed the abandoned-Phase-C leftovers
+- `BookingStatus.Draft` removed; `Booking.HallSlotId` back to required (`int`, non-null nav).
+- `BookingResponse` slot fields back to non-nullable; `BookingMappingProfile` simplified.
+- `SetStatusAsync` lost its Draft guard; `Cancel`/`SetStatus` no longer null-check `HallSlotId`.
+- Migration `20260908165202_V2CleanupDraft` (`Bookings.HallSlotId` → NOT NULL; DB had 0 bookings).
+- Build 0W, `dotnet test` 18/18, `POST /api/bookings` → 201 / repeat → 409 / `GET mine` all verified.
+- The model is now exactly what's used — no dead surface.
 - **Open decision:** choose SQL Server or PostgreSQL before any Data-layer work (affects concurrency-token style and all migrations).
 - **Next step (waiting for approval):** start the Data layer — EF Core packages in `EventBooking.Data`, `Microsoft.EntityFrameworkCore.Design` in `EventBooking.API`, `AppDbContext` with a `DbSet` per entity, Fluent API configs, `SaveChangesAsync` override for the concurrency token (if self-managed), connection string via User Secrets, first migration.
 

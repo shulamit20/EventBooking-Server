@@ -13,10 +13,10 @@ public class BookingMappingProfile : Profile
         CreateMap<Booking, BookingResponse>()
             .ForMember(d => d.EventTypeName, o => o.MapFrom(s => s.EventType.Name))
             .ForMember(d => d.CateringMenuName, o => o.MapFrom(s => s.CateringMenu != null ? s.CateringMenu.Name : null))
-            .ForMember(d => d.HallName, o => o.MapFrom(s => s.HallSlot != null ? s.HallSlot.Hall.Name : null))
-            .ForMember(d => d.VenueName, o => o.MapFrom(s => s.HallSlot != null ? s.HallSlot.Hall.Venue.Name : null))
-            .ForMember(d => d.Date, o => o.MapFrom(s => s.HallSlot != null ? s.HallSlot.Date : (DateTime?)null))
-            .ForMember(d => d.Shift, o => o.MapFrom(s => s.HallSlot != null ? s.HallSlot.Shift.ToString() : null))
+            .ForMember(d => d.HallName, o => o.MapFrom(s => s.HallSlot.Hall.Name))
+            .ForMember(d => d.VenueName, o => o.MapFrom(s => s.HallSlot.Hall.Venue.Name))
+            .ForMember(d => d.Date, o => o.MapFrom(s => s.HallSlot.Date))
+            .ForMember(d => d.Shift, o => o.MapFrom(s => s.HallSlot.Shift.ToString()))
             .ForMember(d => d.Status, o => o.MapFrom(s => s.Status.ToString()))
             .ForMember(d => d.ExtraServices, o => o.MapFrom(s => s.BookingExtraServices));
         // TotalPrice is a stored column — mapped by convention.

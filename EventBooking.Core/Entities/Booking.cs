@@ -2,19 +2,14 @@ using EventBooking.Core.Enums;
 
 namespace EventBooking.Core.Entities;
 
-/// <summary>
-/// A customer's event: the hall slot they reserved plus the services they chose.
-/// While <see cref="Status"/> is <see cref="BookingStatus.Draft"/> it is still being built in
-/// the Event Builder and no hall slot is held; confirming it runs the concurrency-checked
-/// slot take.
-/// </summary>
+/// <summary>A customer's reservation of one <see cref="HallSlot"/>, with optional extra services.</summary>
 public class Booking
 {
     public int Id { get; set; }
 
-    // Foreign key: Booking * -> 1 HallSlot  (nullable while Draft — no slot chosen yet)
-    public int? HallSlotId { get; set; }
-    public HallSlot? HallSlot { get; set; }
+    // Foreign key: Booking * -> 1 HallSlot
+    public int HallSlotId { get; set; }
+    public HallSlot HallSlot { get; set; } = null!;
 
     // Foreign key: Booking * -> 1 User (the customer who made it)
     public Guid OwnerUserId { get; set; }
@@ -31,7 +26,7 @@ public class Booking
     public string HostName { get; set; } = null!;
     public int GuestCount { get; set; }
 
-    public BookingStatus Status { get; set; } = BookingStatus.Draft;
+    public BookingStatus Status { get; set; } = BookingStatus.Pending;
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 

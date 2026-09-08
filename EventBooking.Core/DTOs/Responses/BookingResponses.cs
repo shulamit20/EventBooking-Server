@@ -4,11 +4,11 @@ public class BookingResponse
 {
     public int Id { get; init; }
 
-    public int? HallSlotId { get; init; }
-    public string? HallName { get; init; }
-    public string? VenueName { get; init; }
-    public DateTime? Date { get; init; }
-    public string? Shift { get; init; }
+    public int HallSlotId { get; init; }
+    public string HallName { get; init; } = null!;
+    public string VenueName { get; init; } = null!;
+    public DateTime Date { get; init; }
+    public string Shift { get; init; } = null!;
 
     public int EventTypeId { get; init; }
     public string EventTypeName { get; init; } = null!;

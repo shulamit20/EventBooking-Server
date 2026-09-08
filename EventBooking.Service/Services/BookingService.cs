@@ -172,8 +172,7 @@ public class BookingService : IBookingService
             return Result<BookingResponse>.Invalid("This booking is already cancelled.");
 
         booking.Status = BookingStatus.Cancelled;
-        if (booking.HallSlotId is int slotId)
-            await ReleaseSlotAsync(slotId, ct);
+        await ReleaseSlotAsync(booking.HallSlotId, ct);
 
         var conflict = await CommitAsync(id, ct);
         if (conflict is not null) return conflict;
@@ -184,9 +183,6 @@ public class BookingService : IBookingService
 
     public async Task<Result<BookingResponse>> SetStatusAsync(int id, BookingStatus status, CancellationToken ct = default)
     {
-        if (status == BookingStatus.Draft)
-            return Result<BookingResponse>.Invalid("A booking cannot be moved back to Draft.");
-
         var booking = await _bookings.GetByIdAsync(id, ct); // tracked
         if (booking is null)
             return Result<BookingResponse>.NotFound($"Booking {id} was not found.");
@@ -195,14 +191,12 @@ public class BookingService : IBookingService
         {
             case BookingStatus.Confirmed:
                 booking.Status = BookingStatus.Confirmed;
-                if (booking.HallSlotId is int confirmSlot)
-                    await SetSlotStatusAsync(confirmSlot, SlotStatus.Booked, ct);
+                await SetSlotStatusAsync(booking.HallSlotId, SlotStatus.Booked, ct);
                 break;
 
             case BookingStatus.Cancelled:
                 booking.Status = BookingStatus.Cancelled;
-                if (booking.HallSlotId is int cancelSlot)
-                    await ReleaseSlotAsync(cancelSlot, ct);
+                await ReleaseSlotAsync(booking.HallSlotId, ct);
                 break;
 
             case BookingStatus.Pending:
