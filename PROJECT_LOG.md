@@ -402,8 +402,32 @@ where code branches on the value — lookup tables for business-managed content.
   Live Band (8 000) on a 15 000 slot → `TotalPrice` **45 000**, repeat → **409**.
 - Commits: server `d4dffb3`, client `947f090`.
 
-**Next: v2 Phase B (Catering `CateringMenu` + a dedicated `PriceCalculationService` + price
-breakdown endpoint).**
+### 2026-09-08 — v2 Phase B DONE — build green, `dotnet test` 18/18, price + booking verified
+Scope decided with the student: do B, C, H, J, minimal K, L. **Cut D (messaging), E
+(notifications), F (promotions), G (reviews), I (dashboards)** — they are repeated CRUD; the
+kept phases each demonstrate a distinct graded skill. Original teacher brief warns "depth over
+breadth", so the student will confirm the expanded scope with the teacher; v1 is a safe baseline.
+
+- **`CateringMenu`** entity (`PricePerGuest`, `IsVegetarian`/`IsVegan`/`IncludesDrinks`,
+  `IsActive`, `OwnerUserId`) — its own table because the price scales with guests and it carries
+  menu data. `CateringMenuRepository` + `CateringMenuService` (manager CRUD of **own** only,
+  403 otherwise; public `GET`) + `CateringController` (`/api/catering-menus`). 3 menus seeded.
+- **`Booking.CateringMenuId`** (nullable FK). `CreateBookingRequest` + response + mapping updated.
+- **`PriceCalculationService`** (`IPriceCalculationService`): the single place a selection
+  (slot + guests + catering + extra services) becomes an itemised `PriceBreakdownResponse`,
+  every amount from the DB. `POST /api/pricing/estimate` previews it (anon).
+  `BookingService.CreateAsync` now calls it, ignores any client total, snapshots each line.
+- `Result<T>.Failure(Result)` — forwards a failed result across payload types.
+- Seed: ExtraService id 1 "Catering - Meat Menu" → "Premium Bar Package" (per-guest) so catering
+  lives only in `CateringMenu`.
+- Migration `20260908160353_V2Catering` (applied on top of the Phase A DB, no drop needed).
+- Tests +`PriceCalculationServiceTests` (4): venue + catering(300×220) + flat + per-guest lines,
+  empty selection, missing slot → NotFound, bad service → Invalid.
+- Verified live: `/api/pricing/estimate` slot 3 (15 000) + Meat Menu 300×220 (66 000) + Live
+  Band (8 000) = **89 000**; booking with that selection stored the same total + `Meat Menu`.
+- Commit `53ef4cf`.
+
+**Next: v2 Phase C (Event Builder — `Draft` bookings + confirm reusing the 409 slot take).**
 - **Open decision:** choose SQL Server or PostgreSQL before any Data-layer work (affects concurrency-token style and all migrations).
 - **Next step (waiting for approval):** start the Data layer — EF Core packages in `EventBooking.Data`, `Microsoft.EntityFrameworkCore.Design` in `EventBooking.API`, `AppDbContext` with a `DbSet` per entity, Fluent API configs, `SaveChangesAsync` override for the concurrency token (if self-managed), connection string via User Secrets, first migration.
 
