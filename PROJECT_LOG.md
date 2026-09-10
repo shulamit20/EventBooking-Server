@@ -146,7 +146,7 @@ The current `HallSlot` code uses the self-managed `Guid Version` approach (match
 - New: `EventBooking.Data/AppDbContext.cs` — `DbSet<T>` per entity, `ApplyConfigurationsFromAssembly` in `OnModelCreating`.
 - New: `EventBooking.Data/DependencyInjection.cs` — `AddDataLayer(services, configuration)` extension: reads `ConnectionStrings:Default`, registers `AddDbContext<AppDbContext>` with `UseNpgsql` (scoped).
 - `Program.cs`: `builder.Services.AddDataLayer(builder.Configuration);`.
-- User Secrets: initialised on API (`UserSecretsId` in csproj), `ConnectionStrings:Default` set to a local Postgres value (`Host=localhost;Port=5432;Database=EventBookingDb;Username=postgres;Password=postgres`) — **student must adjust to their real local password**.
+- User Secrets: initialised on API (`UserSecretsId` in csproj); `ConnectionStrings:Default` points at a local Postgres database. The full value, including any credentials, lives in User Secrets only — never in the repo.
 - `dotnet build` passes. `dotnet-ef dbcontext info` fails **as expected** — `BookingExtraService` has no key yet; that is Step B's first task.
 
 **Step B — DONE (build green, `dotnet-ef dbcontext info` succeeds)**
@@ -173,7 +173,7 @@ The current `HallSlot` code uses the self-managed `Guid Version` approach (match
 PostgreSQL was NOT installed. SQL Server IS installed and running. Student chose to install PostgreSQL (no code changes).
 
 ### 2026-09-07 — Step C FINISHED
-- Installed **PostgreSQL 17** (17.11-3) via `winget install -e --id PostgreSQL.PostgreSQL.17 --source winget`. Service `postgresql-x64-17` running, listening on 5432. Superuser `postgres` / password `postgres` (winget default) — matches the User Secrets value already set, no change needed. `psql` at `C:\Program Files\PostgreSQL\17\bin\`.
+- Installed **PostgreSQL 17** (17.11-3) via `winget install -e --id PostgreSQL.PostgreSQL.17 --source winget`. Service `postgresql-x64-17` running, listening on 5432. The local DB credentials are set in User Secrets only and match the running instance, so no change was needed. `psql` at `C:\Program Files\PostgreSQL\17\bin\`.
 - `dotnet ef database update -p EventBooking.Data -s EventBooking.API` → succeeded. Database `EventBookingDb` created.
 - Verified: 7 tables + `__EFMigrationsHistory`; seed rows present (2 venues, 3 halls, 7 slots, 4 extra services).
 
@@ -451,6 +451,55 @@ H search/filter · I dashboards · J ownership-authz pass · K new React screens
 - The model is now exactly what's used — no dead surface.
 - **Open decision:** choose SQL Server or PostgreSQL before any Data-layer work (affects concurrency-token style and all migrations).
 - **Next step (waiting for approval):** start the Data layer — EF Core packages in `EventBooking.Data`, `Microsoft.EntityFrameworkCore.Design` in `EventBooking.API`, `AppDbContext` with a `DbSet` per entity, Fluent API configs, `SaveChangesAsync` override for the concurrency token (if self-managed), connection string via User Secrets, first migration.
+
+### 2026-09-09 — bugfix: real month-long slot calendar + Hebrew content + wording cleanup
+Student reported (via screenshot of `/slots`): browsing showed only a handful of dates per
+hall, "as if the same hall stayed taken all month." Root cause was **not** a concurrency bug —
+the 409/Version locking was already correct and tested — the DB simply only had 7 hand-created
+`HallSlot` rows total (from `HasData` seed), so most days had no slot to book at all.
+
+Fix:
+- `Hall` gained `MorningPrice`/`NoonPrice`/`EveningPrice` (defaults used by generation).
+- New `IHallSlotService.GenerateAsync` (+ `POST /api/hall-slots/generate`, Manager-only): fills
+  in an Available slot for every day of a given month x every shift x one hall or all halls,
+  **skipping Saturday** (venues closed) and skipping any day/shift that already has a slot
+  (idempotent — never overwrites a booked slot). Booking's concurrency/409 logic is untouched.
+- `EventBooking.API/Infrastructure/UpcomingSlotsSeeder.cs` runs this automatically at every
+  startup for the current month + next 2 months, so the calendar is always populated with no
+  manual step. Verified live: `GET /api/hall-slots` for Hall 1 returns 213 slots across the
+  3-month window, Saturdays correctly absent (checked 2026-09-12 has no rows).
+- Migration `V2SlotGenerationAndHebrewSeed`: adds the 3 Hall price columns, and retranslates
+  all seeded display text (Venue/Hall/EventType/ServiceCategory/ExtraService/CateringMenu names
+  + descriptions, demo user display names) from English to Hebrew — student noticed the catalog
+  content was English while the rest of the UI is Hebrew. `ServiceCategory.Code` (the technical
+  key) was left in English on purpose — nothing in the code branches on the English Name strings
+  (checked), so this was a safe content-only change.
+- Client: `AppLayout.jsx` footer no longer says "פרויקט גמר · השרת הוא מה שנבדק" (student's
+  ask — the wording made the app read as a student demo rather than a real product).
+- Also confirmed (student's second question): booking was already correctly gated —
+  `POST /api/bookings` requires `[Authorize(Roles="Customer")]` server-side and the client hides
+  the booking button entirely for anonymous users. The "HostName" field is intentionally free
+  text (who the event is for), not a second account requirement.
+- New `HallSlotServiceTests` (5 tests: Saturday-skip, existing-slot-skip, per-shift pricing,
+  unknown-hall Invalid, all-halls generation). `dotnet test` **23/23** green. Client
+  `npm run build` clean.
+
+### 2026-09-09 — branding + customer-facing wording cleanup
+Student rebranded the client from "EventBooking" to **"NextLevel Events"**: browser tab title
+(`index.html`), header logo and footer (`AppLayout.jsx`). Also removed dev-facing "server/
+database" language student spotted in customer-visible text: `LandingPage.jsx` step 4
+("המחיר מחושב בשרת" → "מחושב אוטומטית"), `BookPage.jsx` 409-conflict panel (dropped the
+"(השרת החזיר 409)" parenthetical), `PriceSummary.jsx` footnote ("מחושבים בשרת מהמחירים במסד
+הנתונים" → "מחושבים אוטומטית ומעודכנים בזמן אמת"). Client-only, no server/API changes.
+`npm run build` clean. (Backend project name `EventBooking.*` / repo names unchanged — this was
+scoped to what the customer sees, not the codebase or GitHub repos.)
+
+### 2026-09-09 — demo-user display names renamed (migration completed)
+Finished the rename started earlier: `SeedData.cs` demo Manager/Customer `DisplayName` changed
+from "מנהל דמו"/"לקוח דמו" to "רותי אברהם"/"יעל כהן" (Admin's "מנהל מערכת" already had no "דמו").
+Migration `RenameDemoUserDisplayNames` created + applied (was blocked earlier in the session by
+Visual Studio holding the build output; student stopped debugging, then it went through).
+`dotnet test` 23/23 green. 7 migrations total now.
 
 ### 2026-09-05 (earlier work, by student)
 - Created the solution and 5 projects with references wired.

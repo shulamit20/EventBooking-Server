@@ -76,4 +76,65 @@ public class HallSlotService : IHallSlotService
         var created = await _slots.GetByIdWithHallAsync(slot.Id, ct);
         return Result<HallSlotResponse>.Ok(_mapper.Map<HallSlotResponse>(created!));
     }
+
+    public async Task<Result<int>> GenerateAsync(GenerateHallSlotsRequest request, CancellationToken ct = default)
+    {
+        IReadOnlyList<Hall> halls;
+        if (request.HallId is int hallId)
+        {
+            var hall = await _halls.GetByIdWithVenueAsync(hallId, ct);
+            if (hall is null)
+                return Result<int>.Invalid($"Hall {hallId} does not exist.");
+            halls = new[] { hall };
+        }
+        else
+        {
+            halls = await _halls.GetAllAsync(ct);
+        }
+
+        var from = new DateTime(request.Year, request.Month, 1);
+        var to = from.AddMonths(1).AddDays(-1);
+
+        var created = 0;
+        foreach (var hall in halls)
+        {
+            var existing = await _slots.GetExistingKeysAsync(hall.Id, from, to, ct);
+
+            for (var date = from; date <= to; date = date.AddDays(1))
+            {
+                if (date.DayOfWeek == DayOfWeek.Saturday)
+                    continue; // Shabbat — venues are closed
+
+                foreach (var shift in Enum.GetValues<ShiftType>())
+                {
+                    if (existing.Contains((date, shift)))
+                        continue; // already has a slot (available, booked or otherwise) — leave it alone
+
+                    await _slots.AddAsync(new HallSlot
+                    {
+                        HallId = hall.Id,
+                        Date = date,
+                        Shift = shift,
+                        BasePrice = PriceFor(hall, shift),
+                        Status = SlotStatus.Available,
+                        Version = Guid.NewGuid(),
+                    }, ct);
+                    created++;
+                }
+            }
+        }
+
+        if (created > 0)
+            await _uow.SaveChangesAsync(ct);
+
+        return Result<int>.Ok(created);
+    }
+
+    private static decimal PriceFor(Hall hall, ShiftType shift) => shift switch
+    {
+        ShiftType.Morning => hall.MorningPrice,
+        ShiftType.Noon => hall.NoonPrice,
+        ShiftType.Evening => hall.EveningPrice,
+        _ => hall.EveningPrice,
+    };
 }

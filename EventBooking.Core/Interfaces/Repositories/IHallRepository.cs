@@ -9,6 +9,9 @@ public interface IHallRepository
 
     Task<IReadOnlyList<Hall>> GetByVenueAsync(int venueId, CancellationToken ct = default);
 
+    /// <summary>Every hall, across every venue (used by the slot-generation job).</summary>
+    Task<IReadOnlyList<Hall>> GetAllAsync(CancellationToken ct = default);
+
     Task<bool> ExistsAsync(int id, CancellationToken ct = default);
 
     Task AddAsync(Hall hall, CancellationToken ct = default);

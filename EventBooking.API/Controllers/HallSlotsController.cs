@@ -42,4 +42,19 @@ public class HallSlotsController : ApiControllerBase
             ? CreatedAtAction(nameof(GetById), new { id = result.Value!.Id }, result.Value)
             : ErrorResult(result);
     }
+
+    /// <summary>
+    /// Fills in Available slots for a whole month (Saturday excluded) for one hall, or every
+    /// hall if HallId is omitted. Idempotent — days that already have a slot are left alone.
+    /// Returns how many slots were created.
+    /// </summary>
+    [HttpPost("generate")]
+    [Authorize(Roles = "Manager")]
+    [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<int>> Generate([FromBody] GenerateHallSlotsRequest request, CancellationToken ct)
+    {
+        var result = await _slots.GenerateAsync(request, ct);
+        return result.IsSuccess ? Ok(result.Value) : ErrorResult(result);
+    }
 }

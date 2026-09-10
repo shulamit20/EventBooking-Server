@@ -22,6 +22,12 @@ public class HallRepository : IHallRepository
             .OrderBy(h => h.Name)
             .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<Hall>> GetAllAsync(CancellationToken ct = default) =>
+        await _context.Halls.AsNoTracking()
+            .Include(h => h.Venue)
+            .OrderBy(h => h.Name)
+            .ToListAsync(ct);
+
     public Task<bool> ExistsAsync(int id, CancellationToken ct = default) =>
         _context.Halls.AnyAsync(h => h.Id == id, ct);
 

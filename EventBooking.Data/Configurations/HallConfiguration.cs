@@ -14,6 +14,10 @@ public class HallConfiguration : IEntityTypeConfiguration<Hall>
         builder.Property(h => h.Name).IsRequired().HasMaxLength(200);
         builder.Property(h => h.Description).HasMaxLength(1000);
 
+        builder.Property(h => h.MorningPrice).HasPrecision(10, 2);
+        builder.Property(h => h.NoonPrice).HasPrecision(10, 2);
+        builder.Property(h => h.EveningPrice).HasPrecision(10, 2);
+
         // One-to-many: Hall 1 -> * HallSlot.
         builder.HasMany(h => h.Slots)
                .WithOne(s => s.Hall)

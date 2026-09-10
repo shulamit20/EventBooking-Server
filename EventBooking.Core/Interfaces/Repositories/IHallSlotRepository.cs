@@ -26,4 +26,12 @@ public interface IHallSlotRepository
         CancellationToken ct = default);
 
     Task AddAsync(HallSlot slot, CancellationToken ct = default);
+
+    /// <summary>
+    /// The (Date, Shift) pairs that already have a slot for this hall in the given range —
+    /// used by generation to skip days that are already covered instead of colliding with
+    /// the unique (HallId, Date, Shift) index.
+    /// </summary>
+    Task<HashSet<(DateTime Date, ShiftType Shift)>> GetExistingKeysAsync(
+        int hallId, DateTime fromDate, DateTime toDate, CancellationToken ct = default);
 }

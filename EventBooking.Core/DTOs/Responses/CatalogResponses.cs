@@ -19,6 +19,9 @@ public class HallResponse
     public string? Description { get; init; }
     public int VenueId { get; init; }
     public string VenueName { get; init; } = null!;
+    public decimal MorningPrice { get; init; }
+    public decimal NoonPrice { get; init; }
+    public decimal EveningPrice { get; init; }
 }
 
 public class HallSlotResponse

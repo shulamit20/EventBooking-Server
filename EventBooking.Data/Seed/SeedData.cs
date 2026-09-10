@@ -36,43 +36,45 @@ internal static class SeedData
     {
         // --- demo accounts (one per role) ---
         modelBuilder.Entity<User>().HasData(
-            new User { Id = AdminId,    Email = "admin@eventbooking.local",   DisplayName = "System Admin",  Role = UserRole.Admin,    PasswordHash = DemoHash, CreatedAtUtc = Seeded },
-            new User { Id = ManagerId,  Email = "manager@eventbooking.local", DisplayName = "Demo Manager",  Role = UserRole.Manager,  PasswordHash = DemoHash, CreatedAtUtc = Seeded },
-            new User { Id = CustomerId, Email = "client@eventbooking.local",  DisplayName = "Demo Customer", Role = UserRole.Customer, PasswordHash = DemoHash, CreatedAtUtc = Seeded });
+            new User { Id = AdminId,    Email = "admin@eventbooking.local",   DisplayName = "מנהל מערכת",  Role = UserRole.Admin,    PasswordHash = DemoHash, CreatedAtUtc = Seeded },
+            new User { Id = ManagerId,  Email = "manager@eventbooking.local", DisplayName = "רותי אברהם",  Role = UserRole.Manager,  PasswordHash = DemoHash, CreatedAtUtc = Seeded },
+            new User { Id = CustomerId, Email = "client@eventbooking.local",  DisplayName = "יעל כהן",     Role = UserRole.Customer, PasswordHash = DemoHash, CreatedAtUtc = Seeded });
 
         // --- lookup: event types ---
         modelBuilder.Entity<EventType>().HasData(
-            new EventType { Id = 1, Name = "Wedding" },
-            new EventType { Id = 2, Name = "Bar Mitzvah" },
-            new EventType { Id = 3, Name = "Bat Mitzvah" },
-            new EventType { Id = 4, Name = "Corporate Event" },
-            new EventType { Id = 5, Name = "Birthday" },
-            new EventType { Id = 6, Name = "Private Event" },
-            new EventType { Id = 7, Name = "Other" });
+            new EventType { Id = 1, Name = "חתונה" },
+            new EventType { Id = 2, Name = "בר מצווה" },
+            new EventType { Id = 3, Name = "בת מצווה" },
+            new EventType { Id = 4, Name = "אירוע עסקי" },
+            new EventType { Id = 5, Name = "יום הולדת" },
+            new EventType { Id = 6, Name = "אירוע פרטי" },
+            new EventType { Id = 7, Name = "אחר" });
 
-        // --- lookup: service categories ---
+        // --- lookup: service categories --- (Code stays a stable English key; Name is the Hebrew display text)
         modelBuilder.Entity<ServiceCategory>().HasData(
-            new ServiceCategory { Id = 1, Code = "Catering",     Name = "Catering" },
-            new ServiceCategory { Id = 2, Code = "TableDesign",  Name = "Table Design" },
-            new ServiceCategory { Id = 3, Code = "BridalChair",  Name = "Bridal Chair" },
-            new ServiceCategory { Id = 4, Code = "Photography",  Name = "Photography" },
-            new ServiceCategory { Id = 5, Code = "DJ",           Name = "DJ / Music" },
-            new ServiceCategory { Id = 6, Code = "Flowers",      Name = "Flowers" },
-            new ServiceCategory { Id = 7, Code = "Lighting",     Name = "Lighting" },
-            new ServiceCategory { Id = 8, Code = "Other",        Name = "Other" });
+            new ServiceCategory { Id = 1, Code = "Catering",     Name = "קייטרינג" },
+            new ServiceCategory { Id = 2, Code = "TableDesign",  Name = "עיצוב שולחנות" },
+            new ServiceCategory { Id = 3, Code = "BridalChair",  Name = "כיסא כלה" },
+            new ServiceCategory { Id = 4, Code = "Photography",  Name = "צילום" },
+            new ServiceCategory { Id = 5, Code = "DJ",           Name = "תקליטן / מוזיקה" },
+            new ServiceCategory { Id = 6, Code = "Flowers",      Name = "פרחים" },
+            new ServiceCategory { Id = 7, Code = "Lighting",     Name = "תאורה" },
+            new ServiceCategory { Id = 8, Code = "Other",        Name = "אחר" });
 
         // --- which categories are offered for which event type ---
         modelBuilder.Entity<EventTypeServiceCategory>().HasData(BuildEventTypeLinks());
 
         // --- venues (owned by the demo manager) ---
         modelBuilder.Entity<Venue>().HasData(
-            new Venue { Id = 1, OwnerUserId = ManagerId, Name = "Beit Simcha", City = "Jerusalem", Address = "Rehov Malchei Yisrael 12", ContactPhone = "02-500-1000" },
-            new Venue { Id = 2, OwnerUserId = ManagerId, Name = "Ganei HaPnina", City = "Bnei Brak", Address = "Rehov Rabbi Akiva 88", ContactPhone = "03-570-2000" });
+            new Venue { Id = 1, OwnerUserId = ManagerId, Name = "בית שמחה", City = "ירושלים", Address = "רחוב מלכי ישראל 12", ContactPhone = "02-500-1000" },
+            new Venue { Id = 2, OwnerUserId = ManagerId, Name = "גני הפנינה", City = "בני ברק", Address = "רחוב רבי עקיבא 88", ContactPhone = "03-570-2000" });
 
+        // MorningPrice/NoonPrice/EveningPrice are the defaults GenerateAsync uses when it fills
+        // in a month's worth of slots; they match the prices already seeded below for consistency.
         modelBuilder.Entity<Hall>().HasData(
-            new Hall { Id = 1, VenueId = 1, Name = "Main Ballroom", Capacity = 400 },
-            new Hall { Id = 2, VenueId = 1, Name = "Garden Hall", Capacity = 150 },
-            new Hall { Id = 3, VenueId = 2, Name = "Crystal Hall", Capacity = 300 });
+            new Hall { Id = 1, VenueId = 1, Name = "האולם הראשי", Capacity = 400, MorningPrice = 6000m, NoonPrice = 9000m, EveningPrice = 15000m },
+            new Hall { Id = 2, VenueId = 1, Name = "אולם הגן",    Capacity = 150, MorningPrice = 4500m, NoonPrice = 6000m, EveningPrice = 8000m },
+            new Hall { Id = 3, VenueId = 2, Name = "אולם הבדולח", Capacity = 300, MorningPrice = 6500m, NoonPrice = 10000m, EveningPrice = 16000m });
 
         modelBuilder.Entity<HallSlot>().HasData(
             new HallSlot { Id = 1, HallId = 1, Date = new DateTime(2026, 10, 1), Shift = ShiftType.Morning, BasePrice = 6000m, Status = SlotStatus.Available, Version = V1 },
@@ -87,16 +89,16 @@ internal static class SeedData
         // Catering has its own entity (CateringMenu) because its price scales with guest count
         // and it carries menu data; ExtraService id 1 is a different per-guest add-on.
         modelBuilder.Entity<ExtraService>().HasData(
-            new ExtraService { Id = 1, OwnerUserId = ManagerId, ServiceCategoryId = 8, Pricing = PricingModel.PerGuest, Name = "Premium Bar Package", Price = 90m, UnitLabel = "per guest", Description = "Open bar, cocktails and soft drinks." },
-            new ExtraService { Id = 2, OwnerUserId = ManagerId, ServiceCategoryId = 6, Pricing = PricingModel.Flat,     Name = "Floral Centerpieces", Price = 180m, UnitLabel = "per table" },
-            new ExtraService { Id = 3, OwnerUserId = ManagerId, ServiceCategoryId = 5, Pricing = PricingModel.Flat,     Name = "Live Band", Price = 8000m, UnitLabel = "per event" },
-            new ExtraService { Id = 4, OwnerUserId = ManagerId, ServiceCategoryId = 4, Pricing = PricingModel.Flat,     Name = "Photography", Price = 5000m, UnitLabel = "per event" });
+            new ExtraService { Id = 1, OwnerUserId = ManagerId, ServiceCategoryId = 8, Pricing = PricingModel.PerGuest, Name = "חבילת בר פרימיום", Price = 90m, UnitLabel = "לאורח", Description = "בר פתוח, קוקטיילים ומשקאות קלים." },
+            new ExtraService { Id = 2, OwnerUserId = ManagerId, ServiceCategoryId = 6, Pricing = PricingModel.Flat,     Name = "סידורי פרחים לשולחן", Price = 180m, UnitLabel = "לשולחן" },
+            new ExtraService { Id = 3, OwnerUserId = ManagerId, ServiceCategoryId = 5, Pricing = PricingModel.Flat,     Name = "להקה חיה", Price = 8000m, UnitLabel = "לאירוע" },
+            new ExtraService { Id = 4, OwnerUserId = ManagerId, ServiceCategoryId = 4, Pricing = PricingModel.Flat,     Name = "צילום", Price = 5000m, UnitLabel = "לאירוע" });
 
         // --- catering menus (owned by the demo manager) ---
         modelBuilder.Entity<CateringMenu>().HasData(
-            new CateringMenu { Id = 1, OwnerUserId = ManagerId, Name = "Meat Menu", PricePerGuest = 220m, IncludesDrinks = true, Description = "Full meat menu, first course to dessert." },
-            new CateringMenu { Id = 2, OwnerUserId = ManagerId, Name = "Dairy Menu", PricePerGuest = 180m, IsVegetarian = true, IncludesDrinks = true, Description = "Dairy and fish menu." },
-            new CateringMenu { Id = 3, OwnerUserId = ManagerId, Name = "Vegan Menu", PricePerGuest = 160m, IsVegetarian = true, IsVegan = true, Description = "Fully plant-based menu." });
+            new CateringMenu { Id = 1, OwnerUserId = ManagerId, Name = "תפריט בשרי", PricePerGuest = 220m, IncludesDrinks = true, Description = "תפריט בשרי מלא, ממנה ראשונה עד קינוח." },
+            new CateringMenu { Id = 2, OwnerUserId = ManagerId, Name = "תפריט חלבי", PricePerGuest = 180m, IsVegetarian = true, IncludesDrinks = true, Description = "תפריט חלבי ודגים." },
+            new CateringMenu { Id = 3, OwnerUserId = ManagerId, Name = "תפריט טבעוני", PricePerGuest = 160m, IsVegetarian = true, IsVegan = true, Description = "תפריט צמחי מלא." });
     }
 
     /// <summary>Sensible event-type → service-category offerings.</summary>

@@ -71,4 +71,15 @@ public class HallSlotRepository : IHallSlotRepository
 
     public async Task AddAsync(HallSlot slot, CancellationToken ct = default) =>
         await _context.HallSlots.AddAsync(slot, ct);
+
+    public async Task<HashSet<(DateTime Date, ShiftType Shift)>> GetExistingKeysAsync(
+        int hallId, DateTime fromDate, DateTime toDate, CancellationToken ct = default)
+    {
+        var rows = await _context.HallSlots.AsNoTracking()
+            .Where(s => s.HallId == hallId && s.Date >= fromDate && s.Date <= toDate)
+            .Select(s => new { s.Date, s.Shift })
+            .ToListAsync(ct);
+
+        return rows.Select(r => (r.Date, r.Shift)).ToHashSet();
+    }
 }

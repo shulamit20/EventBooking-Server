@@ -25,6 +25,11 @@ public class CreateHallRequest
     [Required, StringLength(200)] public string Name { get; set; } = null!;
     [Range(1, 100_000)] public int Capacity { get; set; }
     [StringLength(1000)] public string? Description { get; set; }
+
+    /// <summary>Default per-shift price, used when generating a month of slots for this hall.</summary>
+    [Range(0, 1_000_000)] public decimal MorningPrice { get; set; }
+    [Range(0, 1_000_000)] public decimal NoonPrice { get; set; }
+    [Range(0, 1_000_000)] public decimal EveningPrice { get; set; }
 }
 
 // ---- Hall slot (the limited resource) ----
@@ -52,6 +57,19 @@ public class HallSlotQuery : PageQuery
     /// <summary>"date" (default) or "price".</summary>
     public string? SortBy { get; set; }
     public bool Desc { get; set; }
+}
+
+/// <summary>
+/// Manager-only: ensure an Available slot exists for every day of the given month (Saturday
+/// excluded — venues are closed) x every shift, for one hall or (if HallId is null) every hall.
+/// Idempotent: a day/shift that already has a slot (available, booked or otherwise) is left alone.
+/// </summary>
+public class GenerateHallSlotsRequest
+{
+    public int? HallId { get; set; }
+
+    [Range(2000, 2100)] public int Year { get; set; }
+    [Range(1, 12)] public int Month { get; set; }
 }
 
 // ---- Extra service ----

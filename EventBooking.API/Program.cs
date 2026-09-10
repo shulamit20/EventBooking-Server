@@ -117,6 +117,10 @@ try
 
     app.MapControllers();
 
+    // Keeps the calendar browsable at all times: fills in Available slots for the current +
+    // next 2 months on every startup (idempotent, see UpcomingSlotsSeeder).
+    await app.EnsureUpcomingSlotsAsync();
+
     app.Run();
 }
 catch (HostAbortedException)

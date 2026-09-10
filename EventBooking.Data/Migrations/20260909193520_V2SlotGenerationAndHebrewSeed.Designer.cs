@@ -3,6 +3,7 @@ using System;
 using EventBooking.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EventBooking.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260909193520_V2SlotGenerationAndHebrewSeed")]
+    partial class V2SlotGenerationAndHebrewSeed
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -933,7 +936,7 @@ namespace EventBooking.Data.Migrations
                         {
                             Id = new Guid("b0000000-0000-0000-0000-000000000002"),
                             CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayName = "רותי אברהם",
+                            DisplayName = "מנהל דמו",
                             Email = "manager@eventbooking.local",
                             PasswordHash = "$2a$12$./ujlozjB7mpUpkNuPnKxOQEuUb/FVNPvZ1qYkSDWAD5Af8Sn0JtC",
                             Role = "Manager"
@@ -942,7 +945,7 @@ namespace EventBooking.Data.Migrations
                         {
                             Id = new Guid("c0000000-0000-0000-0000-000000000003"),
                             CreatedAtUtc = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DisplayName = "יעל כהן",
+                            DisplayName = "לקוח דמו",
                             Email = "client@eventbooking.local",
                             PasswordHash = "$2a$12$./ujlozjB7mpUpkNuPnKxOQEuUb/FVNPvZ1qYkSDWAD5Af8Sn0JtC",
                             Role = "Customer"

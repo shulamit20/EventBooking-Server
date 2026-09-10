@@ -14,4 +14,11 @@ public interface IHallSlotService
 
     /// <summary>Manager only. Invalid if the hall is missing or the (hall, date, shift) slot already exists.</summary>
     Task<Result<HallSlotResponse>> CreateAsync(CreateHallSlotRequest request, CancellationToken ct = default);
+
+    /// <summary>
+    /// Manager only (also run automatically at startup for the current + next 2 months).
+    /// Fills in Available slots for a whole month so every hall can be browsed and booked on
+    /// any day (Saturday excluded). Returns how many slots were created.
+    /// </summary>
+    Task<Result<int>> GenerateAsync(GenerateHallSlotsRequest request, CancellationToken ct = default);
 }

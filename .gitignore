@@ -494,6 +494,13 @@ appsettings.*.local.json
 # local screenshots / scratch images (not part of the deliverable)
 /image.png
 /cghv.png
+/*.png
+
+# personal notes / study material / scratch docs — not part of the server deliverable
+/AA.docx
+/DOTNET_PROJECT_STUDY_GUIDE.md
+/DOTNET_PROJECT_STUDY_GUIDE.pdf
+/*.docx
 
 # NLog output
 **/logs/

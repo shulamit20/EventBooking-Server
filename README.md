@@ -66,11 +66,11 @@ project. Set both:
 
 ```bash
 dotnet user-secrets set "ConnectionStrings:Default" \
-  "Host=localhost;Port=5432;Database=EventBookingDb;Username=postgres;Password=YOUR_PG_PASSWORD" \
+  "Host=localhost;Port=5432;Database=EventBookingDb;Username=<db-user>;Password=<db-password>" \
   --project EventBooking.API
 
 dotnet user-secrets set "Jwt:Key" \
-  "a-long-random-string-of-at-least-32-characters" \
+  "<random-string-of-at-least-32-characters>" \
   --project EventBooking.API
 ```
 
@@ -84,8 +84,13 @@ dotnet ef database update -p EventBooking.Data -s EventBooking.API
 ```
 
 This applies all migrations and seeds `EventBookingDb`: the three demo accounts (one per role),
-7 event types, 8 service categories, 2 venues, 3 halls, 7 hall slots, 4 extra services — so the
-system is fully usable right after this command, with no manual inserts.
+7 event types, 8 service categories, 2 venues, 3 halls, 3 catering menus, 4 extra services — so
+the system is fully usable right after this command, with no manual inserts.
+
+Hall slots are not a fixed seeded count: on every startup the API automatically fills in an
+Available slot for every hall, every day of the current month + the next 2 (Saturdays excluded),
+so the calendar is always fully browsable. See `POST /api/hall-slots/generate` (Manager-only) to
+do the same for an arbitrary month.
 
 ## Run
 
@@ -118,6 +123,7 @@ protected endpoints.
 | `POST /api/auth/register`, `/login` | ✅ | ✅ | ✅ |
 | Browse venues / halls / hall-slots / extra-services (`GET`) | ✅ | ✅ | ✅ |
 | Create / update / delete venues, halls, slots, extra-services | — | — | ✅ |
+| `POST /api/hall-slots/generate` (fill in a month's slots) | — | — | ✅ |
 | `POST /api/bookings` (book a slot) | — | ✅ | — |
 | `GET /api/bookings/mine`, `GET /api/bookings/{id}` (own) | — | ✅ | ✅ |
 | `GET /api/bookings` (all, `?status=`) | — | — | ✅ |
@@ -164,6 +170,9 @@ Coverage:
   register rejects a taken email with `Conflict`; a successful register hashes the password,
   forces the `Customer` role, and saves.
 - **`MappingProfilesTests`** — `AssertConfigurationIsValid()` over all three AutoMapper profiles.
+- **`HallSlotServiceTests`** — the automatic month-generation job: skips Saturdays, skips days
+  that already have a slot (idempotent), prices each shift from the hall's defaults, and rejects
+  an unknown hall.
 
 ## Middleware & logging
 
