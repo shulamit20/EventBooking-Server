@@ -20,6 +20,8 @@ public static class DependencyInjection
                 "Connection string 'ConnectionStrings:Default' is missing. " +
                 "Set it with: dotnet user-secrets set \"ConnectionStrings:Default\" \"...\" --project EventBooking.API");
 
+        connectionString = NormalizeConnectionString(connectionString);
+
         // Scoped by default: one AppDbContext per HTTP request.
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 
@@ -35,5 +37,23 @@ public static class DependencyInjection
         services.AddScoped<ICateringMenuRepository, CateringMenuRepository>();
 
         return services;
+    }
+
+    /// <summary>
+    /// Converts a postgres:// URI connection string (e.g. from Render) into the
+    /// key=value format Npgsql expects. Leaves already-valid Npgsql strings untouched.
+    /// </summary>
+    private static string NormalizeConnectionString(string connectionString)
+    {
+        if (!connectionString.StartsWith("postgres://") && !connectionString.StartsWith("postgresql://"))
+            return connectionString;
+
+        var uri = new Uri(connectionString);
+        var userInfo = uri.UserInfo.Split(':', 2);
+
+        return $"Host={uri.Host};Port={(uri.Port > 0 ? uri.Port : 5432)};" +
+               $"Database={uri.AbsolutePath.TrimStart('/')};" +
+               $"Username={Uri.UnescapeDataString(userInfo[0])};Password={Uri.UnescapeDataString(userInfo[1])};" +
+               "SSL Mode=Require;Trust Server Certificate=true";
     }
 }

@@ -1,0 +1,26 @@
+databases:
+  - name: eventbooking-db
+    plan: free
+    databaseName: eventbooking
+    user: eventbooking
+
+services:
+  - type: web
+    name: eventbooking-api
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    envVars:
+      - key: ConnectionStrings__Default
+        fromDatabase:
+          name: eventbooking-db
+          property: connectionString
+      - key: Jwt__Key
+        generateValue: true
+      - key: Jwt__Issuer
+        value: EventBooking.API
+      - key: Jwt__Audience
+        value: EventBooking.Client
+      - key: Cors__AllowedOrigins__0
+        value: http://localhost:5173

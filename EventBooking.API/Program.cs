@@ -5,6 +5,7 @@ using EventBooking.Core.Configuration;
 using EventBooking.Data;
 using EventBooking.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.OpenApi.Models;
 using NLog;
 using NLog.Web;
@@ -91,6 +92,14 @@ try
 
     // --- HTTP pipeline, in order ---
 
+    // Render (and similar hosts) terminate TLS at the edge and forward plain HTTP, tagging the
+    // original scheme in X-Forwarded-Proto. Without this, UseHttpsRedirection below never sees
+    // the request as HTTPS and redirects forever.
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    });
+
     // 1. Error handling first: it must wrap everything below it.
     app.UseExceptionHandling();
 
@@ -116,6 +125,9 @@ try
     app.UseAuthorization();
 
     app.MapControllers();
+
+    // Applies pending EF Core migrations — there's no separate deploy step for it on Render.
+    await app.MigrateDatabaseAsync();
 
     // Keeps the calendar browsable at all times: fills in Available slots for the current +
     // next 2 months on every startup (idempotent, see UpcomingSlotsSeeder).
