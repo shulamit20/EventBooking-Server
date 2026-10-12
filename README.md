@@ -110,7 +110,6 @@ or press **F5** in Visual Studio with `EventBooking.API` as the startup project.
 |---|---|---|
 | Manager | `manager@eventbooking.local` | `Passw0rd!` |
 | Customer | `client@eventbooking.local` | `Passw0rd!` |
-| Admin | `admin@eventbooking.local` | `Passw0rd!` |
 
 **How to authenticate in Swagger:** call `POST /api/auth/login` with one of the pairs above,
 copy the `token` from the response, click **Authorize** (top-right), paste the token, and call
